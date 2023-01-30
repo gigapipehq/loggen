@@ -11,12 +11,12 @@ import (
 )
 
 type Config struct {
-	URL       string            `yaml:"url"`
-	APIKey    string            `yaml:"api_key"`
-	APISecret string            `yaml:"api_secret"`
-	Labels    map[string]string `yaml:"labels"`
-	Rate      int               `yaml:"rate"`
-	Timeout   time.Duration     `yaml:"timeout"`
+	URL       string            `yaml:"url" json:"url" validate:"required"`
+	APIKey    string            `yaml:"api_key" json:"api_key" validate:"required"`
+	APISecret string            `yaml:"api_secret" json:"api_secret" validate:"required"`
+	Labels    map[string]string `yaml:"labels" json:"labels" validate:"required"`
+	Rate      int               `yaml:"rate" json:"rate" validate:"required"`
+	Timeout   time.Duration     `yaml:"timeout" json:"timeout" validate:"required"`
 }
 
 var (
