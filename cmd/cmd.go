@@ -8,6 +8,7 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace"
 
 	"github.com/gigapipehq/loggen/cmd/run"
+	"github.com/gigapipehq/loggen/cmd/server"
 	"github.com/gigapipehq/loggen/internal/config"
 	"github.com/gigapipehq/loggen/internal/otel"
 	"github.com/gigapipehq/loggen/internal/prom"
@@ -33,7 +34,7 @@ var rootCMD = &cobra.Command{
 
 func init() {
 	config.Load()
-	rootCMD.AddCommand(run.CMD())
+	rootCMD.AddCommand(run.CMD(), server.CMD())
 }
 
 func Execute() error {
