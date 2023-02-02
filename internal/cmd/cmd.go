@@ -11,7 +11,11 @@ import (
 	_default "github.com/gigapipehq/loggen/internal/senders/default"
 )
 
-func Do(cfg *config.Config, opName string) error {
+type progressTracker interface {
+	Add(int)
+}
+
+func Do(cfg *config.Config, opName string, progress progressTracker) error {
 	ctx, span := otel.Tracer.Start(context.Background(), opName)
 	defer span.End()
 
@@ -35,6 +39,11 @@ func Do(cfg *config.Config, opName string) error {
 		return fmt.Errorf("unable to create sender: %v", err)
 	}
 
+	go func() {
+		for i := range s.Progress() {
+			progress.Add(i)
+		}
+	}()
 	ctx, cancel := context.WithTimeout(ctx, cfg.Timeout)
 	defer cancel()
 	senders.Start(ctx, s, gen)

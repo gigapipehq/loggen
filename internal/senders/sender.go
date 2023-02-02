@@ -14,6 +14,8 @@ import (
 
 type Sender interface {
 	Send(ctx context.Context, batch []byte) error
+	AddProgress(int)
+	Progress() <-chan int
 }
 
 type Generator interface {
@@ -60,13 +62,14 @@ func Start(ctx context.Context, sender Sender, generator Generator) {
 				lctx, span := otel.Tracer.Start(sctx, "receive new batch")
 				defer span.End()
 
-				size := len(batch)
-				log.Printf("Sending batch of %d lines of %d bytes", generator.Rate(), size)
+				go func() {
+					sender.AddProgress(generator.Rate())
+				}()
 				wg.Add(1)
 				defer wg.Done()
 
 				prom.Lines().Add(float64(generator.Rate()))
-				prom.Bytes().Add(float64(size))
+				prom.Bytes().Add(float64(len(batch)))
 
 				if err := sender.Send(lctx, batch); err != nil {
 					prom.Errors().Inc()

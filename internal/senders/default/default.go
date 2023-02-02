@@ -28,6 +28,7 @@ func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 type DefaultSender struct {
 	httpClient *http.Client
 	transport  *roundTripper
+	progressCh chan int
 }
 
 func (s *DefaultSender) Client() *http.Client {
@@ -57,6 +58,14 @@ func (s *DefaultSender) WithURL(httpURL string) (*DefaultSender, error) {
 	}
 	s.transport.url = u
 	return s, nil
+}
+
+func (s *DefaultSender) AddProgress(count int) {
+	s.progressCh <- count
+}
+
+func (s *DefaultSender) Progress() <-chan int {
+	return s.progressCh
 }
 
 func (s *DefaultSender) Send(ctx context.Context, batch []byte) error {
@@ -102,5 +111,6 @@ func (s *DefaultSender) Send(ctx context.Context, batch []byte) error {
 func New() *DefaultSender {
 	return &DefaultSender{
 		httpClient: &http.Client{},
+		progressCh: make(chan int),
 	}
 }

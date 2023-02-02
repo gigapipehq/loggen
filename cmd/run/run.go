@@ -7,6 +7,7 @@ import (
 
 	"github.com/gigapipehq/loggen/internal/cmd"
 	"github.com/gigapipehq/loggen/internal/config"
+	"github.com/gigapipehq/loggen/internal/progress"
 )
 
 var (
@@ -15,7 +16,8 @@ var (
 		Use:   "run",
 		Short: "Run the generator in cli-mode",
 		Run: func(_ *cobra.Command, _ []string) {
-			if err := cmd.Do(cfg, "run in cli-mode"); err != nil {
+			p := progress.NewBar(cfg.Rate*int(cfg.Timeout.Seconds()), "Sending batch")
+			if err := cmd.Do(cfg, "run in cli-mode", p); err != nil {
 				fmt.Println(err)
 			}
 		},
