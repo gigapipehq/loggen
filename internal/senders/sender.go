@@ -68,11 +68,11 @@ func Start(ctx context.Context, sender Sender, generator Generator) {
 				wg.Add(1)
 				defer wg.Done()
 
-				prom.Lines().Add(float64(generator.Rate()))
-				prom.Bytes().Add(float64(len(batch)))
+				prom.AddLines(generator.Rate())
+				prom.AddBytes(len(batch))
 
 				if err := sender.Send(lctx, batch); err != nil {
-					prom.Errors().Inc()
+					prom.AddErrors(1)
 					log.Printf("Error sending request: %v", err)
 					span.RecordError(err)
 					span.SetStatus(codes.Error, err.Error())

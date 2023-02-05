@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"net/url"
 	"runtime"
 	"time"
@@ -31,7 +30,7 @@ type lib struct {
 
 var l = lib{}
 
-func Initialize(ctx context.Context, httpClient *http.Client, cfg *config.Config) {
+func Initialize(ctx context.Context, cfg *config.Config) {
 	mid, err := machineid.ID()
 	if err != nil {
 		mid = "00000000-0000-0000-0000-000000000000"
@@ -176,14 +175,20 @@ func Initialize(ctx context.Context, httpClient *http.Client, cfg *config.Config
 	}()
 }
 
-func Lines() prometheus.Counter {
-	return l.linesCount
+func AddLines(count int) {
+	addToCount(l.linesCount, count)
 }
 
-func Bytes() prometheus.Counter {
-	return l.bytesCount
+func AddBytes(count int) {
+	addToCount(l.bytesCount, count)
 }
 
-func Errors() prometheus.Counter {
-	return l.errorsCount
+func AddErrors(count int) {
+	addToCount(l.errorsCount, count)
+}
+
+func addToCount(counter prometheus.Counter, count int) {
+	if counter != nil {
+		counter.Add(float64(count))
+	}
 }

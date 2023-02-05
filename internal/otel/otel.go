@@ -3,6 +3,7 @@ package otel
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"runtime"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/matishsiao/goInfo"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/exporters/zipkin"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -23,6 +25,14 @@ var Tracer = otel.Tracer("loggen")
 func NewExporter(collectorURL string, httpClient *http.Client) sdktrace.SpanExporter {
 	curl := fmt.Sprintf("%s/tempo/spans", collectorURL)
 	e, _ := zipkin.New(curl, zipkin.WithClient(httpClient))
+	return e
+}
+
+func NewNoopExporter() sdktrace.SpanExporter {
+	e, _ := stdouttrace.New(
+		stdouttrace.WithWriter(io.Discard),
+		stdouttrace.WithoutTimestamps(),
+	)
 	return e
 }
 

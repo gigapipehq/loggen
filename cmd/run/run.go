@@ -2,6 +2,7 @@ package run
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -16,7 +17,7 @@ var (
 		Use:   "run",
 		Short: "Run the generator in cli-mode",
 		Run: func(_ *cobra.Command, _ []string) {
-			p := progress.NewBar(cfg.Rate*int(cfg.Timeout.Seconds()), "Sending batch")
+			p := progress.NewBar(cfg.Rate*int(cfg.Timeout.Seconds()), os.Stdout)
 			if err := cmd.Do(cfg, "run in cli-mode", p); err != nil {
 				fmt.Println(err)
 			}

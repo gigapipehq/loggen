@@ -47,6 +47,5 @@ func Do(cfg *config.Config, opName string, progress progressTracker) error {
 	ctx, cancel := context.WithTimeout(ctx, cfg.Timeout)
 	defer cancel()
 	senders.Start(ctx, s, gen)
-
 	return nil
 }
