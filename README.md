@@ -29,6 +29,8 @@ labels:
   label2: value2
 rate: 100
 timeout: 30s
+enable_metric: true
+enable_traces: true
 ```
 
 ### Usage
@@ -61,4 +63,24 @@ Flags:
   -l, --labels stringToString   labels for each log (default [])
   -r, --rate int                number of logs to generate per second (default 100)
   -t, --timeout duration        length of time to run the generator before exiting (default 30s)
+
+Global Flags:
+  -m, --enable-metrics   Enable collection of Prometheus metrics (default true)
+  -o, --enable-traces    Enable collection of OpenTelemetry traces (default true)
+```
+
+#### Server mode
+
+```shell
+Run the generator in server-mode
+
+Usage:
+  loggen server [flags]
+
+Flags:
+  -h, --help   help for server
+
+Global Flags:
+  -m, --enable-metrics   Enable collection of Prometheus metrics (default true)
+  -o, --enable-traces    Enable collection of OpenTelemetry traces (default true)
 ```
