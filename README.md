@@ -35,15 +35,21 @@ enable_traces: true
 
 ### Usage
 ```shell
-loggen [command]
+A fake log, metric and trace generator for qryn Cloud
+
+Usage:
+  loggen [command]
 
 Available Commands:
-completion  Generate the autocompletion script for the specified shell
-help        Help about any command
-run         Run the generator in cli-mode
+  completion  Generate the autocompletion script for the specified shell
+  help        Help about any command
+  run         Run the generator in cli-mode
+  server      Run the generator in server-mode
 
 Flags:
--h, --help   help for loggen
+  -m, --enable-metrics   Enable collection of Prometheus metrics (default true)
+  -o, --enable-traces    Enable collection of OpenTelemetry traces (default true)
+  -h, --help             help for loggen
 
 Use "loggen [command] --help" for more information about a command.
 ```
