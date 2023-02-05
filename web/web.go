@@ -1,6 +1,7 @@
 package web
 
 import (
+	"bufio"
 	"context"
 	"log"
 
@@ -14,13 +15,30 @@ import (
 
 func StartServer(ctx context.Context) error {
 	app := fiber.New()
+	app.Use(func(ctx *fiber.Ctx) error {
+		ctx.Context().SetContentType("application/json")
+		return ctx.Next()
+	})
 	app.Post("/", utils.ValidateRequest(&config.Config{}), func(ctx *fiber.Ctx) error {
 		req := ctx.UserContext().Value("req").(*config.Config)
-		p := progress.NewBar(req.Rate*int(req.Timeout.Seconds()), "Sending batch")
-		if err := cmd.Do(req, "server request", p); err != nil {
-			return utils.Error(ctx, fiber.StatusInternalServerError, err.Error())
-		}
-		return utils.MessageResponse(ctx, fiber.StatusOK, "Done")
+		p := progress.NewServer(req.Rate * int(req.Timeout.Seconds()))
+
+		errCh := make(chan error, 1)
+		go func() {
+			errCh <- cmd.Do(req, "server request", p)
+		}()
+		ctx.Response().Header.Set("Cache-Control", "no-cache")
+		ctx.Response().Header.Set("Connection", "keep-alive")
+		ctx.Response().Header.Set("Transfer-Encoding", "chunked")
+		ctx.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
+			defer close(errCh)
+			p.WriteProgress(w)
+			if err := <-errCh; err != nil {
+				_, _ = w.Write(utils.ErrorResponseBytes(err))
+				_ = w.Flush()
+			}
+		})
+		return nil
 	})
 
 	go func() {
@@ -28,7 +46,6 @@ func StartServer(ctx context.Context) error {
 			log.Printf("server error: %v", err)
 		}
 	}()
-
 	<-ctx.Done()
 	return app.Shutdown()
 }

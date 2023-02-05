@@ -11,12 +11,14 @@ import (
 )
 
 type Config struct {
-	URL       string            `yaml:"url" json:"url" validate:"required"`
-	APIKey    string            `yaml:"api_key" json:"api_key" validate:"required"`
-	APISecret string            `yaml:"api_secret" json:"api_secret" validate:"required"`
-	Labels    map[string]string `yaml:"labels" json:"labels" validate:"required"`
-	Rate      int               `yaml:"rate" json:"rate" validate:"required"`
-	Timeout   time.Duration     `yaml:"timeout" json:"timeout" validate:"required"`
+	URL           string            `yaml:"url" json:"url" validate:"required"`
+	APIKey        string            `yaml:"api_key" json:"api_key" validate:"required"`
+	APISecret     string            `yaml:"api_secret" json:"api_secret" validate:"required"`
+	Labels        map[string]string `yaml:"labels" json:"labels" validate:"required"`
+	Rate          int               `yaml:"rate" json:"rate" validate:"required"`
+	Timeout       time.Duration     `yaml:"timeout" json:"timeout"`
+	EnableMetrics bool              `yaml:"enable_metrics"`
+	EnableTraces  bool              `yaml:"enable_traces"`
 }
 
 var (
@@ -55,8 +57,10 @@ func Get() *Config {
 
 func getDefaultConfig() *Config {
 	return &Config{
-		URL:     "https://qryn.gigapipe.com",
-		Rate:    100,
-		Timeout: 30 * time.Second,
+		URL:           "https://qryn.gigapipe.com",
+		Rate:          100,
+		Timeout:       30 * time.Second,
+		EnableMetrics: true,
+		EnableTraces:  true,
 	}
 }
