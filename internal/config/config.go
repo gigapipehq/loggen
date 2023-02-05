@@ -5,8 +5,12 @@ import (
 	"io"
 	"log"
 	"os"
+	"reflect"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
 
@@ -37,10 +41,7 @@ func Load() {
 		}
 
 		c = getDefaultConfig()
-		b, _ := yaml.Marshal(c)
-		if err := os.WriteFile(configFilename, b, os.ModePerm); err != nil {
-			log.Printf("unable to create config file: %v", err)
-		}
+		_ = writeConfig(c)
 		return
 	}
 
@@ -49,6 +50,113 @@ func Load() {
 		fmt.Println(err)
 	}
 	_ = f.Close()
+}
+
+func SettingNames() []string {
+	var tags []string
+	v := reflect.ValueOf(Config{})
+	for i := 0; i < v.Type().NumField(); i++ {
+		tags = append(tags, v.Type().Field(i).Tag.Get("yaml"))
+	}
+	return tags
+}
+
+func GetSettingValue(name string) any {
+	v := reflect.ValueOf(*c)
+	t := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		if name == t.Field(i).Tag.Get("yaml") {
+			return v.Field(i)
+		}
+	}
+	return nil
+}
+
+func UpdateSettingValue(name string, value string) error {
+	val := reflect.ValueOf(c).Elem()
+	for i := 0; i < val.NumField(); i++ {
+		typeField := val.Type().Field(i)
+		if name == typeField.Tag.Get("yaml") {
+			if err := updateSettingValue(name, typeField.Name, value); err != nil {
+				return err
+			}
+			return nil
+		}
+	}
+	return nil
+}
+
+func updateSettingValue(tagName, name string, value string) error {
+	convertErr := func(typeName string) error {
+		return fmt.Errorf("unable to convert value %s for field %s to %s", value, tagName, typeName)
+	}
+	structValue := reflect.ValueOf(c).Elem()
+	structFieldValue := structValue.FieldByName(name)
+	structFieldType := structFieldValue.Type()
+
+	val := reflect.ValueOf(value)
+	switch structFieldType.Kind() {
+	case reflect.Int:
+		i, err := strconv.Atoi(value)
+		if err != nil {
+			return convertErr(reflect.Int.String())
+		}
+		val = reflect.ValueOf(i)
+	case reflect.Bool:
+		b, err := strconv.ParseBool(strings.ToLower(value))
+		if err != nil {
+			return convertErr(reflect.Bool.String())
+		}
+		val = reflect.ValueOf(b)
+	case reflect.Map:
+		if strings.TrimSpace(value) == "" {
+			val = reflect.ValueOf(map[string]string{})
+			break
+		}
+		groups := strings.Split(value, ",")
+		m := map[string]string{}
+		for _, g := range groups {
+			kvs := strings.Split(g, "=")
+			if len(kvs) != 2 {
+				return convertErr("string map")
+			}
+			m[strings.TrimSpace(kvs[0])] = strings.TrimSpace(kvs[1])
+		}
+		val = reflect.ValueOf(m)
+	case reflect.Int64:
+		switch structFieldType.String() {
+		case "time.Duration":
+			d, err := time.ParseDuration(value)
+			if err != nil {
+				return convertErr("time.Duration")
+			}
+			val = reflect.ValueOf(d)
+		default:
+			i, err := strconv.ParseInt(value, 10, 64)
+			if err != nil {
+				return convertErr(reflect.Int.String())
+			}
+			val = reflect.ValueOf(i)
+		}
+	}
+	structFieldValue.Set(val)
+	return writeConfig(c)
+}
+
+func ValidArgSettingName(cmdName string) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return nil
+		}
+		if err := cobra.OnlyValidArgs(cmd, args[:1]); err != nil {
+			return fmt.Errorf(
+				"invalid argument \"%s\" for \"loggen config %s\". Check documentation for list of valid values",
+				args[0],
+				cmdName,
+			)
+		}
+		return nil
+	}
 }
 
 func Get() *Config {
@@ -63,4 +171,9 @@ func getDefaultConfig() *Config {
 		EnableMetrics: true,
 		EnableTraces:  true,
 	}
+}
+
+func writeConfig(c *Config) error {
+	b, _ := yaml.Marshal(c)
+	return os.WriteFile(configFilename, b, os.ModePerm)
 }

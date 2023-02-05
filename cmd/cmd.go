@@ -7,6 +7,7 @@ import (
 	otelsdk "go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/trace"
 
+	configcmd "github.com/gigapipehq/loggen/cmd/config"
 	"github.com/gigapipehq/loggen/cmd/run"
 	"github.com/gigapipehq/loggen/cmd/server"
 	"github.com/gigapipehq/loggen/internal/config"
@@ -55,7 +56,7 @@ func init() {
 		cfg.EnableTraces,
 		"Enable collection of OpenTelemetry traces",
 	)
-	rootCMD.AddCommand(run.CMD(), server.CMD())
+	rootCMD.AddCommand(configcmd.CMD(), run.CMD(), server.CMD())
 }
 
 func Execute() error {
