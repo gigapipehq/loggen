@@ -42,6 +42,7 @@ Usage:
 
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
+  config      Configuration commands
   help        Help about any command
   run         Run the generator in cli-mode
   server      Run the generator in server-mode
@@ -54,8 +55,47 @@ Flags:
 Use "loggen [command] --help" for more information about a command.
 ```
 
-#### CLI mode
+#### Configure
+```shell
+Configuration commands
 
+Usage:
+  loggen config [command]
+
+Available Commands:
+  get         Show current default configuration settings
+  set         Set current default configuration setting
+
+Flags:
+  -h, --help   help for config
+
+Use "loggen config [command] --help" for more information about a command.
+```
+
+##### Get current configuration
+```shell
+Show current default configuration settings
+
+Usage:
+  loggen config get [setting name] [flags]
+
+Flags:
+  -h, --help                   help for get
+  -f, --output-format string   output format of config; yaml, or json (default "yaml")
+```
+
+##### Set new configuration setting
+```shell
+Set current default configuration setting
+
+Usage:
+  loggen config set [setting name] [setting value] [flags]
+
+Flags:
+  -h, --help   help for set
+```
+
+#### CLI mode
 ```shell
 Run the generator in cli-mode
 
@@ -76,7 +116,6 @@ Global Flags:
 ```
 
 #### Server mode
-
 ```shell
 Run the generator in server-mode
 

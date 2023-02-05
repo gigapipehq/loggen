@@ -9,7 +9,7 @@ import (
 )
 
 var setCMD = &cobra.Command{
-	Use:       "set [setting name]",
+	Use:       "set [setting name] [setting value]",
 	Short:     "Set current default configuration setting",
 	ValidArgs: config.SettingNames(),
 	Args:      cobra.MatchAll(cobra.ExactArgs(2), config.ValidArgSettingName("set")),
