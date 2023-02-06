@@ -62,11 +62,13 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig(in *jlexer.Le
 		case "rate":
 			out.Rate = int(in.Int())
 		case "timeout":
-			d, err := time.ParseDuration(in.String())
-			if err != nil {
-				out.Timeout = time.Second * 30
-			}
-			out.Timeout = d
+			out.Timeout = time.Duration(in.Int64())
+		case "format":
+			out.Format = string(in.String())
+		case "EnableMetrics":
+			out.EnableMetrics = bool(in.Bool())
+		case "EnableTraces":
+			out.EnableTraces = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -126,6 +128,21 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig(out *jwriter.
 		const prefix string = ",\"timeout\":"
 		out.RawString(prefix)
 		out.Int64(int64(in.Timeout))
+	}
+	{
+		const prefix string = ",\"format\":"
+		out.RawString(prefix)
+		out.String(string(in.Format))
+	}
+	{
+		const prefix string = ",\"EnableMetrics\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.EnableMetrics))
+	}
+	{
+		const prefix string = ",\"EnableTraces\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.EnableTraces))
 	}
 	out.RawByte('}')
 }

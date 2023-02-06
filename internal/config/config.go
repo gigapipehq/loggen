@@ -20,7 +20,8 @@ type Config struct {
 	APISecret     string            `yaml:"api_secret" json:"api_secret" validate:"required"`
 	Labels        map[string]string `yaml:"labels" json:"labels" validate:"required"`
 	Rate          int               `yaml:"rate" json:"rate" validate:"required"`
-	Timeout       time.Duration     `yaml:"timeout" json:"timeout"`
+	Timeout       time.Duration     `yaml:"timeout" json:"timeout" validate:"required"`
+	Format        string            `yaml:"format" json:"format" validate:"required"`
 	EnableMetrics bool              `yaml:"enable_metrics"`
 	EnableTraces  bool              `yaml:"enable_traces"`
 }
@@ -84,6 +85,10 @@ func UpdateSettingValue(name string, value string) error {
 		}
 	}
 	return nil
+}
+
+func Reset() error {
+	return writeConfig(getDefaultConfig())
 }
 
 func updateSettingValue(tagName, name string, value string) error {
@@ -168,6 +173,7 @@ func getDefaultConfig() *Config {
 		URL:           "https://qryn.gigapipe.com",
 		Rate:          100,
 		Timeout:       30 * time.Second,
+		Format:        "logfmt",
 		EnableMetrics: true,
 		EnableTraces:  true,
 	}

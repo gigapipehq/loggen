@@ -16,6 +16,7 @@ var setCMD = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		if err := config.UpdateSettingValue(args[0], args[1]); err != nil {
 			fmt.Println(err)
+			return
 		}
 		fmt.Printf("Setting %s updated\n", args[0])
 	},

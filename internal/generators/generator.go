@@ -7,17 +7,18 @@ import (
 )
 
 type Generator struct {
-	rate   int
-	labels map[string]string
+	lineFmt string
+	rate    int
+	labels  map[string]string
 }
 
-func New(rate int, labels map[string]string) *Generator {
+func New(lineFmt string, rate int, labels map[string]string) *Generator {
 	labels["job"] = "loggen"
-	return &Generator{rate: rate, labels: labels}
+	return &Generator{lineFmt: lineFmt, rate: rate, labels: labels}
 }
 
 func (g *Generator) Generate(ctx context.Context) ([]byte, error) {
-	return loki.GenerateLokiLogs(ctx, g.rate, g.labels)
+	return loki.GenerateLokiLogs(ctx, g.lineFmt, g.rate, g.labels)
 }
 
 func (g *Generator) Rate() int {

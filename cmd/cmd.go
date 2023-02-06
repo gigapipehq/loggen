@@ -52,7 +52,7 @@ func init() {
 	rootCMD.PersistentFlags().BoolVarP(
 		&cfg.EnableTraces,
 		"enable-traces",
-		"o",
+		"t",
 		cfg.EnableTraces,
 		"Enable collection of OpenTelemetry traces",
 	)
