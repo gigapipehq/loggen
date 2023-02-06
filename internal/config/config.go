@@ -21,7 +21,7 @@ type Config struct {
 	Labels        map[string]string `yaml:"labels" json:"labels" validate:"required"`
 	Rate          int               `yaml:"rate" json:"rate" validate:"required"`
 	Timeout       time.Duration     `yaml:"timeout" json:"timeout" validate:"required"`
-	Format        string            `yaml:"format" json:"format" validate:"required"`
+	Format        string            `yaml:"format" json:"format" validate:"oneof=logfmt json"`
 	EnableMetrics bool              `yaml:"enable_metrics"`
 	EnableTraces  bool              `yaml:"enable_traces"`
 }
