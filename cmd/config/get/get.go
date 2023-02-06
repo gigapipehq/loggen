@@ -51,20 +51,21 @@ var (
 		Args:      cobra.MatchAll(cobra.MaximumNArgs(1), config.ValidArgSettingName("get")),
 		Run: func(_ *cobra.Command, args []string) {
 			cfg := config.Get()
-			if len(args) == 0 {
-				switch outputFormat {
-				case outputFmtYAML:
-					b, _ := yaml.Marshal(cfg)
-					fmt.Print(string(b))
-				case outputFmtJSON:
-					var out bytes.Buffer
-					b, _ := easyjson.Marshal(cfg)
-					_ = json.Indent(&out, b, "", "\t")
-					fmt.Println(out.String())
-				}
+			if len(args) > 0 {
+				fmt.Printf("%v\n", config.GetSettingValue(args[0]))
 				return
 			}
-			fmt.Printf("%v\n", config.GetSettingValue(args[0]))
+
+			switch outputFormat {
+			case outputFmtYAML:
+				b, _ := yaml.Marshal(cfg)
+				fmt.Print(string(b))
+			case outputFmtJSON:
+				var out bytes.Buffer
+				b, _ := easyjson.Marshal(cfg)
+				_ = json.Indent(&out, b, "", "\t")
+				fmt.Println(out.String())
+			}
 		},
 	}
 	validOutputFormats = []string{"yaml", "json"}
@@ -76,7 +77,7 @@ func CMD() *cobra.Command {
 		return pflag.NormalizedName(strings.ToLower(name))
 	})
 	ofusage := fmt.Sprintf("output format of config; %s", outputFormatHelpList())
-	getCMD.Flags().VarP(&outputFormat, "output-format", "f", ofusage)
+	getCMD.Flags().VarP(&outputFormat, "output-format", "o", ofusage)
 	_ = getCMD.RegisterFlagCompletionFunc(
 		"output-format",
 		func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {

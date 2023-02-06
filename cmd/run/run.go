@@ -58,9 +58,16 @@ func CMD() *cobra.Command {
 	runCMD.Flags().DurationVarP(
 		&cfg.Timeout,
 		"timeout",
-		"t",
+		"d",
 		cfg.Timeout,
 		"length of time to run the generator before exiting",
+	)
+	runCMD.Flags().StringVarP(
+		&cfg.Format,
+		"format",
+		"f",
+		cfg.Format,
+		"format to use when sending logs",
 	)
 	return runCMD
 }
