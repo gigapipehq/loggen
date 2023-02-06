@@ -22,13 +22,14 @@ overridden using any of the flags defined below.
 
 ```yaml
 url: https://qryn.gigapipe.com
-api_key: abc
-api_secret: cba
+api_key: my_api_key
+api_secret: my_api_secret
 labels: 
   label1: value1
   label2: value2
 rate: 100
 timeout: 30s
+format: logfmt
 enable_metric: true
 enable_traces: true
 ```
@@ -49,7 +50,7 @@ Available Commands:
 
 Flags:
   -m, --enable-metrics   Enable collection of Prometheus metrics (default true)
-  -o, --enable-traces    Enable collection of OpenTelemetry traces (default true)
+  -t, --enable-traces    Enable collection of OpenTelemetry traces (default true)
   -h, --help             help for loggen
 
 Use "loggen [command] --help" for more information about a command.
@@ -64,6 +65,7 @@ Usage:
 
 Available Commands:
   get         Show current default configuration settings
+  reset       Reset configuration to initial defaults
   set         Set current default configuration setting
 
 Flags:
@@ -81,7 +83,18 @@ Usage:
 
 Flags:
   -h, --help                   help for get
-  -f, --output-format string   output format of config; yaml, or json (default "yaml")
+  -o, --output-format string   output format of config; yaml, or json (default "yaml")
+```
+
+##### Reset configuration
+```shell
+Reset configuration to initial defaults
+
+Usage:
+  loggen config reset [flags]
+
+Flags:
+  -h, --help   help for reset
 ```
 
 ##### Set new configuration setting
@@ -103,16 +116,17 @@ Usage:
   loggen run [flags]
 
 Flags:
-  -k, --api-key string          API key to use for authenticating with qryn Cloud (default "abc")
-  -s, --api-secret string       API key to use for authenticating with qryn Cloud (default "cba")
+  -k, --api-key string          API key to use for authenticating with qryn Cloud (default "")
+  -s, --api-secret string       API key to use for authenticating with qryn Cloud (default "")
+  -f, --format string           format to use when sending logs (default "logfmt")
   -h, --help                    help for run
   -l, --labels stringToString   labels for each log (default [])
   -r, --rate int                number of logs to generate per second (default 100)
-  -t, --timeout duration        length of time to run the generator before exiting (default 30s)
+  -d, --timeout duration        length of time to run the generator before exiting (default 30s)
 
 Global Flags:
   -m, --enable-metrics   Enable collection of Prometheus metrics (default true)
-  -o, --enable-traces    Enable collection of OpenTelemetry traces (default true)
+  -t, --enable-traces    Enable collection of OpenTelemetry traces (default true)
 ```
 
 #### Server mode
