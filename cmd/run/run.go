@@ -63,10 +63,10 @@ func CMD() *cobra.Command {
 		"length of time to run the generator before exiting",
 	)
 	runCMD.Flags().StringVarP(
-		&cfg.Format,
+		&cfg.LogConfig.Format,
 		"format",
 		"f",
-		cfg.Format,
+		cfg.LogConfig.Format,
 		"format to use when sending logs",
 	)
 	return runCMD

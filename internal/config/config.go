@@ -21,9 +21,14 @@ type Config struct {
 	Labels        map[string]string `yaml:"labels" json:"labels" validate:"required"`
 	Rate          int               `yaml:"rate" json:"rate" validate:"required"`
 	Timeout       time.Duration     `yaml:"timeout" json:"timeout" validate:"required"`
-	Format        string            `yaml:"format" json:"format" validate:"oneof=logfmt json"`
+	LogConfig     LogConfig         `yaml:"log_config" json:"log_config" validate:"required"`
 	EnableMetrics bool              `yaml:"enable_metrics"`
 	EnableTraces  bool              `yaml:"enable_traces"`
+}
+
+type LogConfig struct {
+	Format    string            `yaml:"format" json:"format" validate:"oneof=logfmt json"`
+	Structure map[string]string `yaml:"structure" json:"structure" validate:"required"`
 }
 
 var (
@@ -170,10 +175,19 @@ func Get() *Config {
 
 func getDefaultConfig() *Config {
 	return &Config{
-		URL:           "https://qryn.gigapipe.com",
-		Rate:          100,
-		Timeout:       30 * time.Second,
-		Format:        "logfmt",
+		URL:     "https://qryn.gigapipe.com",
+		Rate:    100,
+		Timeout: 30 * time.Second,
+		LogConfig: LogConfig{
+			Format: "format",
+			Structure: map[string]string{
+				"level":       "loglevel",
+				"host":        "domainname",
+				"method":      "httpmethod",
+				"status_code": "httpstatuscodesimple",
+				"bytes":       "number:0,300",
+			},
+		},
 		EnableMetrics: true,
 		EnableTraces:  true,
 	}

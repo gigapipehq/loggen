@@ -22,7 +22,7 @@ func Do(cfg *config.Config, opName string, progress progressTracker) error {
 	gen := func(ctx context.Context) senders.Generator {
 		_, span := otel.Tracer.Start(ctx, "create new generator")
 		defer span.End()
-		return generators.New(cfg.Format, cfg.Rate, cfg.Labels)
+		return generators.New(cfg.LogConfig, cfg.Rate, cfg.Labels)
 	}(ctx)
 
 	s, err := func(ctx context.Context) (senders.Sender, error) {
