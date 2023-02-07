@@ -3,11 +3,12 @@
 package config
 
 import (
-	json "encoding/json"
-	easyjson "github.com/mailru/easyjson"
-	jlexer "github.com/mailru/easyjson/jlexer"
-	jwriter "github.com/mailru/easyjson/jwriter"
-	time "time"
+	"encoding/json"
+	"time"
+
+	"github.com/mailru/easyjson"
+	"github.com/mailru/easyjson/jlexer"
+	"github.com/mailru/easyjson/jwriter"
 )
 
 // suppress unused package warning
@@ -18,7 +19,110 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig(in *jlexer.Lexer, out *Config) {
+func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig(in *jlexer.Lexer, out *LogConfig) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "format":
+			out.Format = string(in.String())
+		case "structure":
+			if in.IsNull() {
+				in.Skip()
+			} else {
+				in.Delim('{')
+				out.Structure = make(map[string]string)
+				for !in.IsDelim('}') {
+					key := string(in.String())
+					in.WantColon()
+					var v1 string
+					v1 = string(in.String())
+					(out.Structure)[key] = v1
+					in.WantComma()
+				}
+				in.Delim('}')
+			}
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig(out *jwriter.Writer, in LogConfig) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"format\":"
+		out.RawString(prefix[1:])
+		out.String(string(in.Format))
+	}
+	{
+		const prefix string = ",\"structure\":"
+		out.RawString(prefix)
+		if in.Structure == nil && (out.Flags&jwriter.NilMapAsEmpty) == 0 {
+			out.RawString(`null`)
+		} else {
+			out.RawByte('{')
+			v2First := true
+			for v2Name, v2Value := range in.Structure {
+				if v2First {
+					v2First = false
+				} else {
+					out.RawByte(',')
+				}
+				out.String(string(v2Name))
+				out.RawByte(':')
+				out.String(string(v2Value))
+			}
+			out.RawByte('}')
+		}
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v LogConfig) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v LogConfig) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *LogConfig) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *LogConfig) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig(l, v)
+}
+func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig1(in *jlexer.Lexer, out *Config) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -52,9 +156,9 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig(in *jlexer.Le
 				for !in.IsDelim('}') {
 					key := string(in.String())
 					in.WantColon()
-					var v1 string
-					v1 = string(in.String())
-					(out.Labels)[key] = v1
+					var v3 string
+					v3 = string(in.String())
+					(out.Labels)[key] = v3
 					in.WantComma()
 				}
 				in.Delim('}')
@@ -62,9 +166,13 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig(in *jlexer.Le
 		case "rate":
 			out.Rate = int(in.Int())
 		case "timeout":
-			out.Timeout = time.Duration(in.Int64())
-		case "format":
-			out.Format = string(in.String())
+			d, err := time.ParseDuration(in.String())
+			if err != nil {
+				d = time.Second * 30
+			}
+			out.Timeout = d
+		case "log_config":
+			(out.LogConfig).UnmarshalEasyJSON(in)
 		case "EnableMetrics":
 			out.EnableMetrics = bool(in.Bool())
 		case "EnableTraces":
@@ -79,7 +187,7 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig(in *jlexer.Le
 		in.Consumed()
 	}
 }
-func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig(out *jwriter.Writer, in Config) {
+func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig1(out *jwriter.Writer, in Config) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -105,16 +213,16 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig(out *jwriter.
 			out.RawString(`null`)
 		} else {
 			out.RawByte('{')
-			v2First := true
-			for v2Name, v2Value := range in.Labels {
-				if v2First {
-					v2First = false
+			v4First := true
+			for v4Name, v4Value := range in.Labels {
+				if v4First {
+					v4First = false
 				} else {
 					out.RawByte(',')
 				}
-				out.String(string(v2Name))
+				out.String(string(v4Name))
 				out.RawByte(':')
-				out.String(string(v2Value))
+				out.String(string(v4Value))
 			}
 			out.RawByte('}')
 		}
@@ -130,9 +238,9 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig(out *jwriter.
 		out.Int64(int64(in.Timeout))
 	}
 	{
-		const prefix string = ",\"format\":"
+		const prefix string = ",\"log_config\":"
 		out.RawString(prefix)
-		out.String(string(in.Format))
+		(in.LogConfig).MarshalEasyJSON(out)
 	}
 	{
 		const prefix string = ",\"EnableMetrics\":"
@@ -150,23 +258,23 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig(out *jwriter.
 // MarshalJSON supports json.Marshaler interface
 func (v Config) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig(&w, v)
+	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig1(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Config) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig(w, v)
+	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig1(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Config) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig(&r, v)
+	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig1(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Config) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig(l, v)
+	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig1(l, v)
 }

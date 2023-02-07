@@ -187,79 +187,42 @@ func (v *stream) UnmarshalEasyJSON(l *jlexer.Lexer) {
 func easyjson3fd435f7DecodeGithubComGigapipehqLoggenInternalGeneratorsLoki1(in *jlexer.Lexer, out *logLine) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
 		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeFieldName(false)
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
+	} else {
+		in.Delim('{')
+		*out = make(logLine)
+		for !in.IsDelim('}') {
+			key := string(in.String())
+			in.WantColon()
+			var v9 string
+			v9 = string(in.String())
+			(*out)[key] = v9
 			in.WantComma()
-			continue
 		}
-		switch key {
-		case "traceId":
-			out.TraceID = string(in.String())
-		case "level":
-			out.Level = string(in.String())
-		case "host":
-			out.Host = string(in.String())
-		case "method":
-			out.Method = string(in.String())
-		case "status_code":
-			out.StatusCode = int(in.Int())
-		case "bytes":
-			out.Bytes = int(in.Int())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
+		in.Delim('}')
 	}
-	in.Delim('}')
 	if isTopLevel {
 		in.Consumed()
 	}
 }
 func easyjson3fd435f7EncodeGithubComGigapipehqLoggenInternalGeneratorsLoki1(out *jwriter.Writer, in logLine) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"traceId\":"
-		out.RawString(prefix[1:])
-		out.String(string(in.TraceID))
+	if in == nil && (out.Flags&jwriter.NilMapAsEmpty) == 0 {
+		out.RawString(`null`)
+	} else {
+		out.RawByte('{')
+		v10First := true
+		for v10Name, v10Value := range in {
+			if v10First {
+				v10First = false
+			} else {
+				out.RawByte(',')
+			}
+			out.String(string(v10Name))
+			out.RawByte(':')
+			out.String(string(v10Value))
+		}
+		out.RawByte('}')
 	}
-	{
-		const prefix string = ",\"level\":"
-		out.RawString(prefix)
-		out.String(string(in.Level))
-	}
-	{
-		const prefix string = ",\"host\":"
-		out.RawString(prefix)
-		out.String(string(in.Host))
-	}
-	{
-		const prefix string = ",\"method\":"
-		out.RawString(prefix)
-		out.String(string(in.Method))
-	}
-	{
-		const prefix string = ",\"status_code\":"
-		out.RawString(prefix)
-		out.Int(int(in.StatusCode))
-	}
-	{
-		const prefix string = ",\"bytes\":"
-		out.RawString(prefix)
-		out.Int(int(in.Bytes))
-	}
-	out.RawByte('}')
 }
 
 // MarshalJSON supports json.Marshaler interface
@@ -320,9 +283,9 @@ func easyjson3fd435f7DecodeGithubComGigapipehqLoggenInternalGeneratorsLoki2(in *
 					out.Streams = (out.Streams)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v9 stream
-					(v9).UnmarshalEasyJSON(in)
-					out.Streams = append(out.Streams, v9)
+					var v11 stream
+					(v11).UnmarshalEasyJSON(in)
+					out.Streams = append(out.Streams, v11)
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -348,11 +311,11 @@ func easyjson3fd435f7EncodeGithubComGigapipehqLoggenInternalGeneratorsLoki2(out 
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v10, v11 := range in.Streams {
-				if v10 > 0 {
+			for v12, v13 := range in.Streams {
+				if v12 > 0 {
 					out.RawByte(',')
 				}
-				(v11).MarshalEasyJSON(out)
+				(v13).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}

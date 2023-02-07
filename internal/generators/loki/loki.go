@@ -9,6 +9,7 @@ import (
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/go-logfmt/logfmt"
 
+	"github.com/gigapipehq/loggen/internal/config"
 	"github.com/gigapipehq/loggen/internal/otel"
 )
 
@@ -21,35 +22,21 @@ type stream struct {
 	Values [][]string        `json:"values"`
 }
 
-type logLine struct {
-	TraceID    string `json:"traceId"`
-	Level      string `json:"level"`
-	Host       string `json:"host"`
-	Method     string `json:"method"`
-	StatusCode int    `json:"status_code"`
-	Bytes      int    `json:"bytes"`
-}
+//easyjson:json
+type logLine map[string]string
 
-func (l *logLine) toLogFMT() (string, error) {
+func (l logLine) toLogFMT() (string, error) {
 	buf := bytes.NewBuffer([]byte{})
 	e := logfmt.NewEncoder(buf)
-	if err := e.EncodeKeyvals(
-		"traceId", l.TraceID,
-		"level", l.Level,
-		"host", l.Host,
-		"method", l.Method,
-		"status_code", l.StatusCode,
-		"bytes", l.Bytes,
-	); err != nil {
-		return "", err
-	}
-	if err := e.EndRecord(); err != nil {
-		return "", err
+	for k, v := range l {
+		if err := e.EncodeKeyval(k, v); err != nil {
+			return "", err
+		}
 	}
 	return buf.String(), nil
 }
 
-func GenerateLokiLogs(ctx context.Context, lineFmt string, count int, labels map[string]string) ([]byte, error) {
+func GenerateLokiLogs(ctx context.Context, logConfig config.LogConfig, count int, labels map[string]string) ([]byte, error) {
 	l := log{
 		Streams: []stream{
 			{
@@ -65,26 +52,24 @@ func GenerateLokiLogs(ctx context.Context, lineFmt string, count int, labels map
 		s, _ := l.toLogFMT()
 		return s
 	}
-	if lineFmt == "json" {
+	if logConfig.Format == "json" {
 		marshalLine = func(l logLine) string {
 			b, _ := l.MarshalJSON()
 			return string(b)
 		}
 	}
 
+	rand := gofakeit.New(0)
 	for i := 0; i < count; i++ {
 		l.Streams[0].Values[i] = []string{
 			fmt.Sprintf("%d", time.Now().UnixNano()),
 		}
-		ll := logLine{
-			TraceID:    span.SpanContext().TraceID().String(),
-			Level:      gofakeit.LogLevel("general"),
-			Host:       gofakeit.DomainName(),
-			Method:     gofakeit.HTTPMethod(),
-			StatusCode: gofakeit.HTTPStatusCodeSimple(),
-			Bytes:      gofakeit.Number(0, 3000),
+		line := logLine{}
+		for key, structure := range logConfig.Structure {
+			line[key] = rand.Generate(fmt.Sprintf("{%s}", structure))
 		}
-		l.Streams[0].Values[i] = append(l.Streams[0].Values[i], marshalLine(ll))
+		line["traceId"] = span.SpanContext().TraceID().String()
+		l.Streams[0].Values[i] = append(l.Streams[0].Values[i], marshalLine(line))
 	}
 	return l.MarshalJSON()
 }
