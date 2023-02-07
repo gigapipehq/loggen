@@ -49,7 +49,7 @@ func NewBar(max int, writer io.Writer) *Bar {
 			progressbar.OptionThrottle(65*time.Millisecond),
 			progressbar.OptionShowCount(),
 			progressbar.OptionOnCompletion(func() {
-				_, _ = fmt.Fprint(writer, "\nAll batches sent. Waiting for all requests to complete...")
+				_, _ = fmt.Fprint(writer, "\nAll batches sent. Waiting for all requests to complete...\n")
 			}),
 			progressbar.OptionSpinnerType(14),
 			progressbar.OptionFullWidth(),

@@ -3,6 +3,7 @@ package senders
 import (
 	"context"
 	"log"
+	"math"
 	"sync"
 	"time"
 
@@ -24,8 +25,12 @@ type Generator interface {
 }
 
 func Start(ctx context.Context, sender Sender, generator Generator) {
+	deadline, _ := ctx.Deadline()
+	batchMax := int(math.Ceil(time.Until(deadline).Seconds()))
 	batchChannel := make(chan []byte, 5)
+
 	go func() {
+		batchesCreated := 0
 		gctx, span := otel.Tracer.Start(ctx, "start generating")
 		defer span.End()
 		for {
@@ -43,6 +48,11 @@ func Start(ctx context.Context, sender Sender, generator Generator) {
 				}
 				span.End()
 				batchChannel <- batch
+
+				batchesCreated++
+				if batchesCreated >= batchMax {
+					return
+				}
 			}
 		}
 	}()
