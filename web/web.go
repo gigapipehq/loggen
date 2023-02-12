@@ -3,9 +3,12 @@ package web
 import (
 	"bufio"
 	"context"
+	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/mailru/easyjson"
 
 	"github.com/gigapipehq/loggen/internal/cmd"
 	"github.com/gigapipehq/loggen/internal/config"
@@ -14,7 +17,14 @@ import (
 )
 
 func StartServer(ctx context.Context) error {
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		JSONEncoder: func(v interface{}) ([]byte, error) {
+			return easyjson.Marshal(v.(easyjson.Marshaler))
+		},
+		JSONDecoder: func(data []byte, v interface{}) error {
+			return easyjson.Unmarshal(data, v.(easyjson.Unmarshaler))
+		},
+	})
 	app.Use(func(ctx *fiber.Ctx) error {
 		ctx.Context().SetContentType("application/json")
 		return ctx.Next()
@@ -39,6 +49,29 @@ func StartServer(ctx context.Context) error {
 			}
 		})
 		return nil
+	})
+	app.Get("/config", func(ctx *fiber.Ctx) error {
+		return ctx.JSON(config.Get())
+	})
+	app.Get("/config/logs", func(ctx *fiber.Ctx) error {
+		q := ctx.Context().QueryArgs().PeekMulti("category")
+		categories := make([]string, len(q))
+		for i, category := range q {
+			categories[i] = string(category)
+		}
+		return ctx.JSON(config.Get().LogConfig.Detailed(categories...))
+	})
+	app.Patch("/config", func(ctx *fiber.Ctx) error {
+		var cfg map[string]interface{}
+		if err := json.Unmarshal(ctx.Body(), &cfg); err != nil {
+			return ctx.Status(fiber.StatusBadRequest).Send(utils.ErrorResponseBytes(err))
+		}
+		for k, v := range cfg {
+			if err := config.UpdateSettingValue(k, fmt.Sprintf("%v", v)); err != nil {
+				return ctx.Status(fiber.StatusBadRequest).Send(utils.ErrorResponseBytes(err))
+			}
+		}
+		return ctx.SendStatus(fiber.StatusNoContent)
 	})
 
 	go func() {
