@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/brianvoe/gofakeit/v6"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -22,13 +23,55 @@ type Config struct {
 	Rate          int               `yaml:"rate" json:"rate" validate:"required"`
 	Timeout       time.Duration     `yaml:"timeout" json:"timeout" validate:"required"`
 	LogConfig     LogConfig         `yaml:"log_config" json:"log_config" validate:"required"`
-	EnableMetrics bool              `yaml:"enable_metrics"`
-	EnableTraces  bool              `yaml:"enable_traces"`
+	EnableMetrics bool              `yaml:"enable_metrics" json:"-"`
+	EnableTraces  bool              `yaml:"enable_traces" json:"-"`
 }
 
 type LogConfig struct {
 	Format    string            `yaml:"format" json:"format" validate:"oneof=logfmt json"`
 	Structure map[string]string `yaml:"structure" json:"structure" validate:"required"`
+}
+
+type DetailedLogConfig struct {
+	Format    string    `json:"format"`
+	Structure []LogInfo `json:"structure"`
+}
+
+type LogInfo struct {
+	Display     string           `json:"display"`
+	Category    string           `json:"category"`
+	Description string           `json:"description"`
+	Example     string           `json:"example"`
+	Params      []gofakeit.Param `json:"params"`
+}
+
+func (lc *LogConfig) Detailed(categories ...string) *DetailedLogConfig {
+	cfg := &DetailedLogConfig{Format: lc.Format, Structure: []LogInfo{}}
+	for _, v := range lc.Structure {
+		split := strings.Split(v, ":")
+		if info := gofakeit.GetFuncLookup(split[0]); info != nil {
+			if len(categories) > 0 {
+				if !hasCategory(info.Category, categories) {
+					continue
+				}
+			}
+
+			if len(split) > 1 {
+				params := strings.Split(split[1], ",")
+				for i, p := range params {
+					info.Params[i].Default = p
+				}
+			}
+			cfg.Structure = append(cfg.Structure, LogInfo{
+				Display:     info.Display,
+				Category:    info.Category,
+				Description: info.Description,
+				Example:     info.Example,
+				Params:      info.Params,
+			})
+		}
+	}
+	return cfg
 }
 
 var (
@@ -196,4 +239,13 @@ func getDefaultConfig() *Config {
 func writeConfig(c *Config) error {
 	b, _ := yaml.Marshal(c)
 	return os.WriteFile(configFilename, b, os.ModePerm)
+}
+
+func hasCategory(category string, list []string) bool {
+	for _, cat := range list {
+		if cat == category {
+			return true
+		}
+	}
+	return false
 }
