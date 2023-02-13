@@ -33,7 +33,7 @@ spec:
     spec:
       containers:
         - name: loggen
-          image: {{build}}
+          image: "{{IMAGE_NAME}}:{{IMAGE_TAG}}"
           ports:
             - containerPort: 8080
               protocol: TCP
