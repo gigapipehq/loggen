@@ -39,4 +39,5 @@ spec:
               protocol: TCP
           imagePullPolicy: IfNotPresent
           command:
+            - ./loggen
             - server
