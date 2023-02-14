@@ -15,4 +15,4 @@ EXPOSE 8080
 WORKDIR /
 COPY --from=builder /app/loggen .
 
-CMD ["./loggen server"]
+CMD ["./loggen"]

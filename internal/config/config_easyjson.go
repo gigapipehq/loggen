@@ -520,6 +520,10 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig3(in *jlexer.L
 			out.Timeout = d
 		case "log_config":
 			(out.LogConfig).UnmarshalEasyJSON(in)
+		case "enable_metrics":
+			out.EnableMetrics = bool(in.Bool())
+		case "enable_traces":
+			out.EnableTraces = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -584,6 +588,16 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig3(out *jwriter
 		const prefix string = ",\"log_config\":"
 		out.RawString(prefix)
 		(in.LogConfig).MarshalEasyJSON(out)
+	}
+	{
+		const prefix string = ",\"enable_metrics\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.EnableMetrics))
+	}
+	{
+		const prefix string = ",\"enable_traces\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.EnableTraces))
 	}
 	out.RawByte('}')
 }

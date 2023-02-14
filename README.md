@@ -49,8 +49,6 @@ Available Commands:
   server      Run the generator in server-mode
 
 Flags:
-  -m, --enable-metrics   Enable collection of Prometheus metrics (default true)
-  -t, --enable-traces    Enable collection of OpenTelemetry traces (default true)
   -h, --help             help for loggen
 
 Use "loggen [command] --help" for more information about a command.
@@ -123,10 +121,8 @@ Flags:
   -l, --labels stringToString   labels for each log (default [])
   -r, --rate int                number of logs to generate per second (default 100)
   -d, --timeout duration        length of time to run the generator before exiting (default 30s)
-
-Global Flags:
-  -m, --enable-metrics   Enable collection of Prometheus metrics (default true)
-  -t, --enable-traces    Enable collection of OpenTelemetry traces (default true)
+  -m, --enable-metrics          enable collection of Prometheus metrics (default true)
+  -t, --enable-traces           enable collection of OpenTelemetry traces (default true)
 ```
 
 #### Server mode
@@ -138,8 +134,4 @@ Usage:
 
 Flags:
   -h, --help   help for server
-
-Global Flags:
-  -m, --enable-metrics   Enable collection of Prometheus metrics (default true)
-  -o, --enable-traces    Enable collection of OpenTelemetry traces (default true)
 ```

@@ -23,8 +23,8 @@ type Config struct {
 	Rate          int               `yaml:"rate" json:"rate" validate:"required"`
 	Timeout       time.Duration     `yaml:"timeout" json:"timeout" validate:"required"`
 	LogConfig     LogConfig         `yaml:"log_config" json:"log_config" validate:"required"`
-	EnableMetrics bool              `yaml:"enable_metrics" json:"-"`
-	EnableTraces  bool              `yaml:"enable_traces" json:"-"`
+	EnableMetrics bool              `yaml:"enable_metrics" json:"enable_metrics"`
+	EnableTraces  bool              `yaml:"enable_traces" json:"enable_traces"`
 }
 
 type LogConfig struct {

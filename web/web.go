@@ -35,7 +35,7 @@ func StartServer(ctx context.Context) error {
 
 		errCh := make(chan error, 1)
 		go func() {
-			errCh <- cmd.Do(req, "server request", p)
+			errCh <- cmd.Do(ctx.Context(), req, "server request", p)
 		}()
 		ctx.Response().Header.Set("Cache-Control", "no-cache")
 		ctx.Response().Header.Set("Connection", "keep-alive")

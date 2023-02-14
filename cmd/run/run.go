@@ -1,6 +1,7 @@
 package run
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -18,7 +19,7 @@ var (
 		Short: "Run the generator in cli-mode",
 		Run: func(_ *cobra.Command, _ []string) {
 			p := progress.NewBar(cfg.Rate*int(cfg.Timeout.Seconds()), os.Stdout)
-			if err := cmd.Do(cfg, "run in cli-mode", p); err != nil {
+			if err := cmd.Do(context.Background(), cfg, "run in cli-mode", p); err != nil {
 				fmt.Println(err)
 			}
 		},
@@ -68,6 +69,20 @@ func CMD() *cobra.Command {
 		"f",
 		cfg.LogConfig.Format,
 		"format to use when sending logs",
+	)
+	runCMD.Flags().BoolVarP(
+		&cfg.EnableMetrics,
+		"enable-metrics",
+		"m",
+		cfg.EnableMetrics,
+		"enable collection of Prometheus metrics",
+	)
+	runCMD.Flags().BoolVarP(
+		&cfg.EnableTraces,
+		"enable-traces",
+		"t",
+		cfg.EnableTraces,
+		"enable collection of OpenTelemetry traces",
 	)
 	return runCMD
 }
