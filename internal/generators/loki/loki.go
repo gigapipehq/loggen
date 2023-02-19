@@ -23,18 +23,22 @@ type stream struct {
 	Values [][]string        `json:"values"`
 }
 
-//easyjson:json
 type logLine map[string]string
 
-func (l logLine) toLogFMT() (string, error) {
+func (l logLine) ToLogFMT() string {
 	buf := bytes.NewBuffer([]byte{})
 	e := logfmt.NewEncoder(buf)
 	for k, v := range l {
 		if err := e.EncodeKeyval(k, v); err != nil {
-			return "", err
+			return ""
 		}
 	}
-	return buf.String(), nil
+	return buf.String()
+}
+
+func (l logLine) ToJSON() string {
+	b, _ := l.MarshalJSON()
+	return string(b)
 }
 
 func GenerateLokiLogs(ctx context.Context, logConfig config.LogConfig, count int, labels map[string]string) ([]byte, error) {
@@ -49,17 +53,7 @@ func GenerateLokiLogs(ctx context.Context, logConfig config.LogConfig, count int
 	ctx, span := otel.Tracer.Start(ctx, "generate loki logs batch")
 	defer span.End()
 
-	marshalLine := func(l logLine) string {
-		s, _ := l.toLogFMT()
-		return s
-	}
-	if logConfig.Format == "json" {
-		marshalLine = func(l logLine) string {
-			b, _ := l.MarshalJSON()
-			return string(b)
-		}
-	}
-
+	marshalLine := config.GetLogLineMarshaller[logLine](logConfig)
 	rand := gofakeit.New(0)
 	for i := 0; i < count; i++ {
 		l.Streams[0].Values[i] = []string{
@@ -72,16 +66,7 @@ func GenerateLokiLogs(ctx context.Context, logConfig config.LogConfig, count int
 }
 
 func GenerateLokiExampleLog(logConfig config.LogConfig) []byte {
-	marshalLine := func(l logLine) string {
-		s, _ := l.toLogFMT()
-		return s
-	}
-	if logConfig.Format == "json" {
-		marshalLine = func(l logLine) string {
-			b, _ := l.MarshalJSON()
-			return string(b)
-		}
-	}
+	marshalLine := config.GetLogLineMarshaller[logLine](logConfig)
 	return []byte(marshalLine(generateLine(gofakeit.New(0), logConfig.Structure)))
 }
 
