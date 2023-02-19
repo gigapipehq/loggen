@@ -222,7 +222,7 @@ func getDefaultConfig() *Config {
 		Rate:    100,
 		Timeout: 30 * time.Second,
 		LogConfig: LogConfig{
-			Format: "format",
+			Format: "logfmt",
 			Structure: map[string]string{
 				"level":       "loglevel",
 				"host":        "domainname",

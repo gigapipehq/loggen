@@ -8,6 +8,7 @@ import (
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/go-logfmt/logfmt"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gigapipehq/loggen/internal/config"
 	"github.com/gigapipehq/loggen/internal/otel"
@@ -64,12 +65,31 @@ func GenerateLokiLogs(ctx context.Context, logConfig config.LogConfig, count int
 		l.Streams[0].Values[i] = []string{
 			fmt.Sprintf("%d", time.Now().UnixNano()),
 		}
-		line := logLine{}
-		for key, structure := range logConfig.Structure {
-			line[key] = rand.Generate(fmt.Sprintf("{%s}", structure))
-		}
-		line["traceId"] = span.SpanContext().TraceID().String()
+		line := generateLine(rand, logConfig.Structure)
 		l.Streams[0].Values[i] = append(l.Streams[0].Values[i], marshalLine(line))
 	}
 	return l.MarshalJSON()
+}
+
+func GenerateLokiExampleLog(logConfig config.LogConfig) []byte {
+	marshalLine := func(l logLine) string {
+		s, _ := l.toLogFMT()
+		return s
+	}
+	if logConfig.Format == "json" {
+		marshalLine = func(l logLine) string {
+			b, _ := l.MarshalJSON()
+			return string(b)
+		}
+	}
+	return []byte(marshalLine(generateLine(gofakeit.New(0), logConfig.Structure)))
+}
+
+func generateLine(rand *gofakeit.Faker, structure map[string]string) logLine {
+	line := logLine{}
+	for k, v := range structure {
+		line[k] = rand.Generate(fmt.Sprintf("{%s}", v))
+	}
+	line["traceId"] = trace.TraceID([16]byte{1}).String()
+	return line
 }
