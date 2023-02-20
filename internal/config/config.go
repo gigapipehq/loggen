@@ -45,6 +45,22 @@ type LogInfo struct {
 	Params      []gofakeit.Param `json:"params"`
 }
 
+type logLine interface {
+	ToLogFMT() string
+	ToJSON() string
+}
+
+func GetLogLineMarshaller[T logLine](config LogConfig) func(T) string {
+	if config.Format == "json" {
+		return func(obj T) string {
+			return obj.ToJSON()
+		}
+	}
+	return func(obj T) string {
+		return obj.ToLogFMT()
+	}
+}
+
 func (lc *LogConfig) Detailed(categories ...string) *DetailedLogConfig {
 	cfg := &DetailedLogConfig{Format: lc.Format, Structure: []LogInfo{}}
 	for _, v := range lc.Structure {
@@ -222,7 +238,7 @@ func getDefaultConfig() *Config {
 		Rate:    100,
 		Timeout: 30 * time.Second,
 		LogConfig: LogConfig{
-			Format: "format",
+			Format: "logfmt",
 			Structure: map[string]string{
 				"level":       "loglevel",
 				"host":        "domainname",

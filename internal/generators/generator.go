@@ -26,3 +26,7 @@ func (g *Generator) Generate(ctx context.Context) ([]byte, error) {
 func (g *Generator) Rate() int {
 	return g.rate
 }
+
+func Example(logConfig config.LogConfig) []byte {
+	return loki.GenerateLokiExampleLog(logConfig)
+}
