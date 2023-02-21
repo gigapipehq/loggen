@@ -61,31 +61,38 @@ func GetLogLineMarshaller[T logLine](config LogConfig) func(T) string {
 	}
 }
 
-func (lc *LogConfig) Detailed(categories ...string) *DetailedLogConfig {
+func (lc *LogConfig) Detailed(fromConfig bool, categories ...string) *DetailedLogConfig {
 	cfg := &DetailedLogConfig{Format: lc.Format, Structure: []LogInfo{}}
-	for _, v := range lc.Structure {
-		split := strings.Split(v, ":")
-		if info := gofakeit.GetFuncLookup(split[0]); info != nil {
-			if len(categories) > 0 {
-				if !hasCategory(info.Category, categories) {
-					continue
+	infos := gofakeit.FuncLookups
+	if fromConfig {
+		configInfos := map[string]gofakeit.Info{}
+		for _, v := range lc.Structure {
+			split := strings.Split(v, ":")
+			if info := gofakeit.GetFuncLookup(split[0]); info != nil {
+				if len(split) > 1 {
+					params := strings.Split(split[1], ",")
+					for i, p := range params {
+						info.Params[i].Default = p
+					}
 				}
+				configInfos[split[0]] = *info
 			}
-
-			if len(split) > 1 {
-				params := strings.Split(split[1], ",")
-				for i, p := range params {
-					info.Params[i].Default = p
-				}
-			}
-			cfg.Structure = append(cfg.Structure, LogInfo{
-				Display:     info.Display,
-				Category:    info.Category,
-				Description: info.Description,
-				Example:     info.Example,
-				Params:      info.Params,
-			})
 		}
+		infos = configInfos
+	}
+	for _, info := range infos {
+		if len(categories) > 0 {
+			if !hasCategory(info.Category, categories) {
+				continue
+			}
+		}
+		cfg.Structure = append(cfg.Structure, LogInfo{
+			Display:     info.Display,
+			Category:    info.Category,
+			Description: info.Description,
+			Example:     info.Example,
+			Params:      info.Params,
+		})
 	}
 	return cfg
 }
