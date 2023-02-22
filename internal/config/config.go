@@ -45,6 +45,9 @@ type LogInfo struct {
 	Params      []gofakeit.Param `json:"params"`
 }
 
+//easyjson:json
+type DetailedLogStructure []LogInfo
+
 type logLine interface {
 	ToLogFMT() string
 	ToJSON() string
@@ -61,8 +64,7 @@ func GetLogLineMarshaller[T logLine](config LogConfig) func(T) string {
 	}
 }
 
-func (lc *LogConfig) Detailed(fromConfig bool, categories ...string) *DetailedLogConfig {
-	cfg := &DetailedLogConfig{Format: lc.Format, Structure: []LogInfo{}}
+func (lc *LogConfig) Detailed(fromConfig bool, categories ...string) DetailedLogStructure {
 	infos := gofakeit.FuncLookups
 	if fromConfig {
 		configInfos := map[string]gofakeit.Info{}
@@ -80,13 +82,14 @@ func (lc *LogConfig) Detailed(fromConfig bool, categories ...string) *DetailedLo
 		}
 		infos = configInfos
 	}
+	li := DetailedLogStructure{}
 	for _, info := range infos {
 		if len(categories) > 0 {
 			if !hasCategory(info.Category, categories) {
 				continue
 			}
 		}
-		cfg.Structure = append(cfg.Structure, LogInfo{
+		li = append(li, LogInfo{
 			Display:     info.Display,
 			Category:    info.Category,
 			Description: info.Description,
@@ -94,7 +97,7 @@ func (lc *LogConfig) Detailed(fromConfig bool, categories ...string) *DetailedLo
 			Params:      info.Params,
 		})
 	}
-	return cfg
+	return li
 }
 
 var (
