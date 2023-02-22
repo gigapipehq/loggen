@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"bufio"
+	"context"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -16,14 +17,17 @@ func Run(ctx *fiber.Ctx) error {
 	p := progress.NewServer(req.Rate * int(req.Timeout.Seconds()))
 
 	errCh := make(chan error, 1)
+	cmdCtx, cancel := context.WithCancel(ctx.Context())
 	go func() {
-		errCh <- cmd.Do(ctx.Context(), req, "server request", p)
+		errCh <- cmd.Do(cmdCtx, req, "server request", p)
 	}()
 	ctx.Response().Header.Set("Cache-Control", "no-cache")
 	ctx.Response().Header.Set("Connection", "keep-alive")
 	ctx.Response().Header.Set("Transfer-Encoding", "chunked")
 	ctx.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
 		defer close(errCh)
+		defer cancel()
+
 		p.WriteProgress(w)
 		if err := <-errCh; err != nil {
 			_, _ = w.Write(utils.ErrorResponseBytes(err))
