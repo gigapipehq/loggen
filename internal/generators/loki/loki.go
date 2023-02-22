@@ -59,7 +59,8 @@ func GenerateLokiLogs(ctx context.Context, logConfig config.LogConfig, count int
 		l.Streams[0].Values[i] = []string{
 			fmt.Sprintf("%d", time.Now().UnixNano()),
 		}
-		line := generateLine(rand, logConfig.Structure)
+		line := generateLine(rand, logConfig.Structure, span.SpanContext().TraceID())
+		line["spanId"] = span.SpanContext().SpanID().String()
 		l.Streams[0].Values[i] = append(l.Streams[0].Values[i], marshalLine(line))
 	}
 	return l.MarshalJSON()
@@ -67,14 +68,14 @@ func GenerateLokiLogs(ctx context.Context, logConfig config.LogConfig, count int
 
 func GenerateLokiExampleLog(logConfig config.LogConfig) []byte {
 	marshalLine := config.GetLogLineMarshaller[logLine](logConfig)
-	return []byte(marshalLine(generateLine(gofakeit.New(0), logConfig.Structure)))
+	return []byte(marshalLine(generateLine(gofakeit.New(0), logConfig.Structure, [16]byte{1})))
 }
 
-func generateLine(rand *gofakeit.Faker, structure map[string]string) logLine {
+func generateLine(rand *gofakeit.Faker, structure map[string]string, traceID trace.TraceID) logLine {
 	line := logLine{}
 	for k, v := range structure {
 		line[k] = rand.Generate(fmt.Sprintf("{%s}", v))
 	}
-	line["traceId"] = trace.TraceID([16]byte{1}).String()
+	line["traceId"] = traceID.String()
 	return line
 }
