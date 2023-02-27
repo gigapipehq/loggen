@@ -2,17 +2,10 @@ package _default
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
-
-	"github.com/gigapipehq/loggen/internal/otel"
 )
 
 type roundTripper struct {
@@ -68,16 +61,9 @@ func (s *DefaultSender) Progress() <-chan int {
 	return s.progressCh
 }
 
-func (s *DefaultSender) Send(ctx context.Context, batch []byte) error {
+func (s *DefaultSender) Send(batch []byte) error {
 	httpMethod := "POST"
 	reqSize := int64(len(batch))
-	ctx, span := otel.Tracer.Start(ctx, "send log batch", trace.WithAttributes(
-		attribute.Key("http.url").String(s.transport.url.String()),
-		attribute.Key("http.method").String(httpMethod),
-		attribute.Key("http.request_size").Int64(reqSize),
-	))
-	defer span.End()
-
 	body := io.NopCloser(bytes.NewReader(batch))
 	req := &http.Request{
 		URL:           s.transport.url,
@@ -87,22 +73,14 @@ func (s *DefaultSender) Send(ctx context.Context, batch []byte) error {
 	}
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
-	ctx, span = otel.Tracer.Start(ctx, "batch logs sent", trace.WithAttributes(
-		attribute.Key("http.status").Int(resp.StatusCode),
-	))
-	defer span.End()
+
 	defer func() {
 		_ = resp.Body.Close()
 	}()
-
 	if resp.StatusCode >= http.StatusBadRequest {
 		rbody, _ := io.ReadAll(resp.Body)
-		span.RecordError(err)
-		span.SetStatus(codes.Error, string(rbody))
 		return fmt.Errorf("unexpected status code %d received with error: %s", resp.StatusCode, string(rbody))
 	}
 	return nil

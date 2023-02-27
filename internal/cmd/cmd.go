@@ -22,25 +22,11 @@ func Do(ctx context.Context, cfg *config.Config, opName string, progress progres
 	shutdownMT := configureTracesAndTraces(ctx, cfg)
 	defer shutdownMT()
 
-	ctx, span := otel.Tracer.Start(ctx, opName)
-	defer span.End()
-
-	gen := func(ctx context.Context) senders.Generator {
-		_, span := otel.Tracer.Start(ctx, "create new generator")
-		defer span.End()
-		return generators.New(cfg.LogConfig, cfg.Rate, cfg.Labels)
-	}(ctx)
-
-	s, err := func(ctx context.Context) (senders.Sender, error) {
-		_, span := otel.Tracer.Start(ctx, "create new sender")
-		defer span.End()
-		auth := map[string]string{
-			"X-API-Key":    cfg.APIKey,
-			"X-API-Secret": cfg.APISecret,
-		}
-		curl := fmt.Sprintf("%s/loki/api/v1/push", cfg.URL)
-		return _default.New().WithHeaders(auth).WithURL(curl)
-	}(ctx)
+	gen := generators.New(cfg)
+	s, err := _default.New().WithHeaders(map[string]string{
+		"X-API-Key":    cfg.APIKey,
+		"X-API-Secret": cfg.APISecret,
+	}).WithURL(fmt.Sprintf("%s/loki/api/v1/push", cfg.URL))
 	if err != nil {
 		return fmt.Errorf("unable to create sender: %v", err)
 	}
@@ -61,7 +47,7 @@ func configureTracesAndTraces(ctx context.Context, cfg *config.Config) func() {
 		prom.Initialize(ctx, cfg)
 	}
 	exporter := otel.NewNoopExporter()
-	if cfg.EnableTraces {
+	if cfg.Traces.Enabled {
 		sender := _default.New().WithHeaders(map[string]string{
 			"X-API-Key":    cfg.APIKey,
 			"X-API-Secret": cfg.APISecret,

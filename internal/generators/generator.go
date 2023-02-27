@@ -1,30 +1,24 @@
 package generators
 
 import (
-	"context"
-
 	"github.com/gigapipehq/loggen/internal/config"
 	"github.com/gigapipehq/loggen/internal/generators/loki"
 )
 
 type Generator struct {
-	logConfig config.LogConfig
-	rate      int
-	labels    map[string]string
+	config *config.Config
 }
 
-func New(logConfig config.LogConfig, rate int, labels map[string]string) *Generator {
-	labels["job"] = "loggen"
-	labels["format"] = logConfig.Format
-	return &Generator{logConfig: logConfig, rate: rate, labels: labels}
+func New(cfg *config.Config) *Generator {
+	return &Generator{config: cfg}
 }
 
-func (g *Generator) Generate(ctx context.Context) ([]byte, error) {
-	return loki.GenerateLokiLogs(ctx, g.logConfig, g.rate, g.labels)
+func (g *Generator) Generate() ([]byte, error) {
+	return loki.GenerateLokiLogs(g.config)
 }
 
 func (g *Generator) Rate() int {
-	return g.rate
+	return g.config.Rate
 }
 
 func Example(logConfig config.LogConfig) []byte {

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
+	"net/url"
 	"os"
 	"reflect"
 	"strconv"
@@ -12,6 +14,8 @@ import (
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/spf13/cobra"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"gopkg.in/yaml.v3"
 )
 
@@ -24,12 +28,34 @@ type Config struct {
 	Timeout       time.Duration     `yaml:"timeout" json:"timeout" validate:"required"`
 	LogConfig     LogConfig         `yaml:"log_config" json:"log_config" validate:"required"`
 	EnableMetrics bool              `yaml:"enable_metrics" json:"enable_metrics"`
-	EnableTraces  bool              `yaml:"enable_traces" json:"enable_traces"`
+	Traces        TracesConfig      `yaml:"traces" json:"traces" validate:"required"`
 }
 
 type LogConfig struct {
 	Format    string            `yaml:"format" json:"format" validate:"oneof=logfmt json"`
 	Structure map[string]string `yaml:"structure" json:"structure" validate:"required"`
+}
+
+type TracesConfig struct {
+	Enabled  bool                  `yaml:"enabled" json:"enabled"`
+	Defaults []attribute.Key       `yaml:"defaults" json:"defaults"`
+	Custom   attributeKeyValueList `yaml:"custom" json:"custom"`
+	Spans    []SpanStep            `json:"spans" json:"spans"`
+}
+
+type SpanStep struct {
+	Kind       trace.SpanKind        `yaml:"kind" json:"kind" validate:"required"`
+	Name       string                `yaml:"name" json:"name"`
+	Duration   time.Duration         `yaml:"duration" json:"duration"`
+	Attributes []SpanAttributeConfig `yaml:"attributes" json:"attributes"`
+	Children   []SpanStep            `yaml:"children" json:"children"`
+}
+
+type SpanAttributeConfig struct {
+	Name                string `yaml:"name" json:"name"`
+	ValueType           string `yaml:"value_type" json:"value_type" validate:"required"`
+	ResolveFake         string `yaml:"resolve_fake" json:"resolve_fake"`
+	ResolveFromLogValue string `yaml:"resolve_from_log_value" json:"resolve_from_log_value"`
 }
 
 type DetailedLogConfig struct {
@@ -51,6 +77,39 @@ type DetailedLogStructure []LogInfo
 type logLine interface {
 	ToLogFMT() string
 	ToJSON() string
+}
+
+func init() {
+	gofakeit.AddFuncLookup("url_path", gofakeit.Info{
+		Display:     "URL path",
+		Category:    "internet",
+		Description: "Random URL path",
+		Example:     "/users/turtle",
+		Output:      "string",
+		Generate: func(r *rand.Rand, m *gofakeit.MapParams, info *gofakeit.Info) (interface{}, error) {
+			u, _ := url.Parse(gofakeit.URL())
+			return u.Path, nil
+		},
+	})
+}
+
+type attributeKeyValueList []attribute.KeyValue
+
+func (kvList *attributeKeyValueList) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var m map[string]interface{}
+	if err := unmarshal(&m); err != nil {
+		return err
+	}
+
+	var kv []attribute.KeyValue
+	for k, v := range m {
+		kv = append(kv, attribute.KeyValue{
+			Key:   attribute.Key(k),
+			Value: attribute.StringValue(fmt.Sprintf("%v", v)),
+		})
+	}
+	*kvList = kv
+	return nil
 }
 
 func GetLogLineMarshaller[T logLine](config LogConfig) func(T) string {
@@ -123,6 +182,7 @@ func Load() {
 	b, _ := io.ReadAll(f)
 	if err := yaml.Unmarshal(b, c); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 	_ = f.Close()
 }
@@ -258,7 +318,6 @@ func getDefaultConfig() *Config {
 			},
 		},
 		EnableMetrics: true,
-		EnableTraces:  true,
 	}
 }
 

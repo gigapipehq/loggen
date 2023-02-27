@@ -77,12 +77,5 @@ func CMD() *cobra.Command {
 		cfg.EnableMetrics,
 		"enable collection of Prometheus metrics",
 	)
-	runCMD.Flags().BoolVarP(
-		&cfg.EnableTraces,
-		"enable-traces",
-		"t",
-		cfg.EnableTraces,
-		"enable collection of OpenTelemetry traces",
-	)
 	return runCMD
 }
