@@ -16,11 +16,44 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gigapipehq/loggen/internal/config"
 )
 
-var Tracer = otel.Tracer("loggen")
+var (
+	Tracer trace.Tracer
+
+	knownResourceWithAttributes = map[attribute.Key]func() resource.Option{
+		semconv.HostNameKey:                  resource.WithHost,
+		semconv.OSDescriptionKey:             resource.WithOSDescription,
+		semconv.OSTypeKey:                    resource.WithOSType,
+		semconv.ProcessExecutableNameKey:     resource.WithProcessExecutableName,
+		semconv.ProcessExecutablePathKey:     resource.WithProcessExecutablePath,
+		semconv.ProcessCommandArgsKey:        resource.WithProcessCommandArgs,
+		semconv.ProcessOwnerKey:              resource.WithProcessOwner,
+		semconv.ProcessPIDKey:                resource.WithProcessPID,
+		semconv.ProcessRuntimeDescriptionKey: resource.WithProcessRuntimeDescription,
+		semconv.ProcessRuntimeNameKey:        resource.WithProcessRuntimeName,
+		semconv.ProcessRuntimeVersionKey:     resource.WithProcessRuntimeVersion,
+	}
+	knownBaseAttributes = []attribute.KeyValue{
+		semconv.HostArchKey.String(runtime.GOARCH),
+		semconv.TelemetrySDKNameKey.String("opentelemetry"),
+		semconv.TelemetrySDKLanguageKey.String("go"),
+		semconv.TelemetrySDKVersionKey.String(otel.Version()),
+	}
+)
+
+func init() {
+	mid, err := machineid.ID()
+	if err != nil {
+		mid = "00000000-0000-0000-0000-000000000000"
+	}
+	info, _ := goInfo.GetInfo()
+	knownBaseAttributes = append(knownBaseAttributes, semconv.DeviceIDKey.String(mid))
+	knownBaseAttributes = append(knownBaseAttributes, attribute.Int("host.cpus", info.CPUs))
+}
 
 func NewExporter(collectorURL string, httpClient *http.Client) sdktrace.SpanExporter {
 	curl := fmt.Sprintf("%s/tempo/spans", collectorURL)
@@ -37,41 +70,43 @@ func NewNoopExporter() sdktrace.SpanExporter {
 }
 
 func NewProvider(exporter sdktrace.SpanExporter, cfg *config.Config) *sdktrace.TracerProvider {
-	mid, err := machineid.ID()
-	if err != nil {
-		mid = "00000000-0000-0000-0000-000000000000"
+	opts := []resource.Option{}
+	attrs := []attribute.KeyValue{}
+	for _, k := range cfg.Traces.Defaults {
+		if f, ok := knownResourceWithAttributes[k]; ok {
+			opts = append(opts, f())
+			continue
+		}
+		for _, kv := range knownBaseAttributes {
+			if kv.Key == k {
+				attrs = append(attrs, kv)
+				break
+			}
+		}
 	}
 
-	info, _ := goInfo.GetInfo()
-	labels := []string{}
-	for k, v := range cfg.Labels {
-		labels = append(labels, fmt.Sprintf("%s: %s", k, v))
+	var serviceName string
+	for _, kv := range cfg.Traces.Custom {
+		if kv.Key == semconv.ServiceNameKey {
+			serviceName = kv.Value.AsString()
+			continue
+		}
+		attrs = append(attrs, kv)
 	}
-	baseResource, _ := resource.New(
-		context.Background(),
-		resource.WithProcess(),
-		resource.WithOS(),
-		resource.WithHost(),
-		resource.WithTelemetrySDK(),
-	)
+	if serviceName == "" {
+		serviceName = "loggen"
+	}
+	Tracer = otel.Tracer(serviceName)
+
+	attrs = append(attrs, semconv.ServiceNameKey.String(serviceName))
+	baseResource, _ := resource.New(context.Background(), opts...)
 	r, _ := resource.Merge(
 		baseResource,
 		resource.NewWithAttributes(
 			semconv.SchemaURL,
-			semconv.ServiceNameKey.String("Loggen"),
-			semconv.DeviceIDKey.String(mid),
-			semconv.HostArchKey.String(runtime.GOARCH),
-			attribute.Key("host.cpus").Int(info.CPUs),
-			semconv.TelemetrySDKLanguageGo,
-			attribute.Key("config.url").String(cfg.URL),
-			attribute.Key("config.api_key").String(cfg.APIKey),
-			attribute.Key("config.api_secret").String(cfg.APISecret),
-			attribute.Key("config.labels").StringSlice(labels),
-			attribute.Key("config.rate").Int(cfg.Rate),
-			attribute.Key("config.timeout").String(cfg.Timeout.String()),
+			attrs...,
 		),
 	)
-
 	return sdktrace.NewTracerProvider(
 		sdktrace.WithBatcher(exporter),
 		sdktrace.WithResource(r),
