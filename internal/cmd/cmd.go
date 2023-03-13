@@ -59,7 +59,9 @@ func configureTracesAndTraces(ctx context.Context, cfg *config.Config) func() {
 
 	return func() {
 		if tp != nil {
-			_ = tp.Shutdown(context.Background())
+			ctx = context.Background()
+			_ = tp.ForceFlush(ctx)
+			_ = tp.Shutdown(ctx)
 		}
 	}
 }
