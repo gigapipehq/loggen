@@ -112,6 +112,14 @@ func (kvList *attributeKeyValueList) UnmarshalYAML(unmarshal func(interface{}) e
 	return nil
 }
 
+func (kvList attributeKeyValueList) MarshalYAML() (interface{}, error) {
+	m := map[string]interface{}{}
+	for _, v := range kvList {
+		m[string(v.Key)] = v.Value.AsInterface()
+	}
+	return m, nil
+}
+
 func GetLogLineMarshaller[T logLine](config LogConfig) func(T) string {
 	if config.Format == "json" {
 		return func(obj T) string {
@@ -318,6 +326,9 @@ func getDefaultConfig() *Config {
 			},
 		},
 		EnableMetrics: true,
+		Traces: TracesConfig{
+			Enabled: true,
+		},
 	}
 }
 
