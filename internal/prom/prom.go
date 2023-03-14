@@ -30,7 +30,7 @@ type lib struct {
 
 var l = lib{}
 
-func Initialize(ctx context.Context, cfg *config.Config) {
+func Initialize(ctx context.Context, cfg *config.Config) chan struct{} {
 	mid, err := machineid.ID()
 	if err != nil {
 		mid = "00000000-0000-0000-0000-000000000000"
@@ -84,6 +84,7 @@ func Initialize(ctx context.Context, cfg *config.Config) {
 		l.errorsCount,
 	)
 
+	qch := make(chan struct{})
 	go func() {
 		u, _ := url.Parse(fmt.Sprintf("%s/api/v1/prom/remote/write", cfg.URL))
 		client, _ := remote.NewWriteClient("loggen", &remote.ClientConfig{
@@ -100,79 +101,16 @@ func Initialize(ctx context.Context, cfg *config.Config) {
 		for {
 			select {
 			case <-ctx.Done():
+				sendMetrics(reg, client)
+				t.Stop()
+				qch <- struct{}{}
 				return
 			case <-t.C:
-				metrics, err := reg.Gather()
-				if err != nil {
-					log.Printf("unable to gather metrics: %v", err)
-				}
-
-				timeseries := []prompb.TimeSeries{}
-				metadata := []prompb.MetricMetadata{}
-				for _, family := range metrics {
-					var ftype prompb.MetricMetadata_MetricType
-					switch family.GetType() {
-					case io_prometheus_client.MetricType_COUNTER:
-						ftype = prompb.MetricMetadata_COUNTER
-					case io_prometheus_client.MetricType_GAUGE:
-						ftype = prompb.MetricMetadata_GAUGE
-					default:
-						continue
-					}
-					metadata = append(metadata, prompb.MetricMetadata{
-						Type:             ftype,
-						MetricFamilyName: family.GetName(),
-						Help:             family.GetHelp(),
-					})
-
-					samples := []prompb.Sample{}
-					plabels := []prompb.Label{
-						{
-							Name:  "__name__",
-							Value: family.GetName(),
-						},
-					}
-					for _, s := range family.GetMetric() {
-						var value float64
-						if s.GetCounter() != nil {
-							value = s.GetCounter().GetValue()
-						} else if s.GetGauge() != nil {
-							value = s.GetGauge().GetValue()
-						}
-
-						ts := s.GetTimestampMs()
-						if ts == 0 {
-							ts = time.Now().UnixMilli()
-						}
-						samples = append(samples, prompb.Sample{
-							Value:     value,
-							Timestamp: ts,
-						})
-						for _, v := range s.GetLabel() {
-							plabels = append(plabels, prompb.Label{
-								Name:  v.GetName(),
-								Value: v.GetValue(),
-							})
-						}
-					}
-
-					timeseries = append(timeseries, prompb.TimeSeries{
-						Labels:  plabels,
-						Samples: samples,
-					})
-				}
-
-				b, _ := (&prompb.WriteRequest{
-					Timeseries: timeseries,
-					Metadata:   metadata,
-				}).Marshal()
-				encoded := snappy.Encode(nil, b)
-				if err := client.Store(context.Background(), encoded); err != nil {
-					log.Printf("unable to store metrics: %v", err)
-				}
+				sendMetrics(reg, client)
 			}
 		}
 	}()
+	return qch
 }
 
 func AddLines(count int) {
@@ -190,5 +128,76 @@ func AddErrors(count int) {
 func addToCount(counter prometheus.Counter, count int) {
 	if counter != nil {
 		counter.Add(float64(count))
+	}
+}
+
+func sendMetrics(reg *prometheus.Registry, client remote.WriteClient) {
+	metrics, err := reg.Gather()
+	if err != nil {
+		log.Printf("unable to gather metrics: %v", err)
+	}
+
+	timeseries := []prompb.TimeSeries{}
+	metadata := []prompb.MetricMetadata{}
+	for _, family := range metrics {
+		var ftype prompb.MetricMetadata_MetricType
+		switch family.GetType() {
+		case io_prometheus_client.MetricType_COUNTER:
+			ftype = prompb.MetricMetadata_COUNTER
+		case io_prometheus_client.MetricType_GAUGE:
+			ftype = prompb.MetricMetadata_GAUGE
+		default:
+			continue
+		}
+		metadata = append(metadata, prompb.MetricMetadata{
+			Type:             ftype,
+			MetricFamilyName: family.GetName(),
+			Help:             family.GetHelp(),
+		})
+
+		samples := []prompb.Sample{}
+		plabels := []prompb.Label{
+			{
+				Name:  "__name__",
+				Value: family.GetName(),
+			},
+		}
+		for _, s := range family.GetMetric() {
+			var value float64
+			if s.GetCounter() != nil {
+				value = s.GetCounter().GetValue()
+			} else if s.GetGauge() != nil {
+				value = s.GetGauge().GetValue()
+			}
+
+			ts := s.GetTimestampMs()
+			if ts == 0 {
+				ts = time.Now().UnixMilli()
+			}
+			samples = append(samples, prompb.Sample{
+				Value:     value,
+				Timestamp: ts,
+			})
+			for _, v := range s.GetLabel() {
+				plabels = append(plabels, prompb.Label{
+					Name:  v.GetName(),
+					Value: v.GetValue(),
+				})
+			}
+		}
+
+		timeseries = append(timeseries, prompb.TimeSeries{
+			Labels:  plabels,
+			Samples: samples,
+		})
+	}
+
+	b, _ := (&prompb.WriteRequest{
+		Timeseries: timeseries,
+		Metadata:   metadata,
+	}).Marshal()
+	encoded := snappy.Encode(nil, b)
+	if err := client.Store(context.Background(), encoded); err != nil {
+		log.Printf("unable to store metrics: %v", err)
 	}
 }

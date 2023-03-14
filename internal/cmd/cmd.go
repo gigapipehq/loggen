@@ -18,8 +18,8 @@ type progressTracker interface {
 	Add(int)
 }
 
-func Do(ctx context.Context, cfg *config.Config, opName string, progress progressTracker) error {
-	shutdownMT := configureTracesAndTraces(ctx, cfg)
+func Do(ctx context.Context, cfg *config.Config, progress progressTracker) error {
+	shutdownMT := configureMetricsAndTraces(ctx, cfg)
 	defer shutdownMT()
 
 	gen := generators.New(cfg)
@@ -42,9 +42,11 @@ func Do(ctx context.Context, cfg *config.Config, opName string, progress progres
 	return nil
 }
 
-func configureTracesAndTraces(ctx context.Context, cfg *config.Config) func() {
+func configureMetricsAndTraces(ctx context.Context, cfg *config.Config) func() {
+	pctx, cancel := context.WithCancel(ctx)
+	var qch chan struct{}
 	if cfg.EnableMetrics {
-		prom.Initialize(ctx, cfg)
+		qch = prom.Initialize(pctx, cfg)
 	}
 	exporter := otel.NewNoopExporter()
 	if cfg.Traces.Enabled {
@@ -58,10 +60,13 @@ func configureTracesAndTraces(ctx context.Context, cfg *config.Config) func() {
 	otelsdk.SetTracerProvider(tp)
 
 	return func() {
+		cancel()
 		if tp != nil {
-			ctx = context.Background()
-			_ = tp.ForceFlush(ctx)
-			_ = tp.Shutdown(ctx)
+			_ = tp.Shutdown(context.Background())
+		}
+		if cfg.EnableMetrics {
+			<-qch
+			close(qch)
 		}
 	}
 }

@@ -19,7 +19,7 @@ var (
 		Short: "Run the generator in cli-mode",
 		Run: func(_ *cobra.Command, _ []string) {
 			p := progress.NewBar(cfg.Rate*int(cfg.Timeout.Seconds()), os.Stdout)
-			if err := cmd.Do(context.Background(), cfg, "run in cli-mode", p); err != nil {
+			if err := cmd.Do(context.Background(), cfg, p); err != nil {
 				fmt.Println(err)
 			}
 		},

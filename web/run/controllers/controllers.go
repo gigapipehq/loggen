@@ -19,7 +19,7 @@ func Run(ctx *fiber.Ctx) error {
 	errCh := make(chan error, 1)
 	cmdCtx, cancel := context.WithCancel(ctx.Context())
 	go func() {
-		errCh <- cmd.Do(cmdCtx, req, "server request", p)
+		errCh <- cmd.Do(cmdCtx, req, p)
 	}()
 	ctx.Response().Header.Set("Cache-Control", "no-cache")
 	ctx.Response().Header.Set("Connection", "keep-alive")
