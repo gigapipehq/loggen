@@ -25,10 +25,47 @@ type Config struct {
 	APISecret     string            `yaml:"api_secret" json:"api_secret" validate:"required"`
 	Labels        map[string]string `yaml:"labels" json:"labels" validate:"required"`
 	Rate          int               `yaml:"rate" json:"rate" validate:"required"`
-	Timeout       time.Duration     `yaml:"timeout" json:"timeout" validate:"required"`
+	Timeout       Duration          `yaml:"timeout" json:"timeout" validate:"required"`
 	LogConfig     LogConfig         `yaml:"log_config" json:"log_config" validate:"required"`
 	EnableMetrics bool              `yaml:"enable_metrics" json:"enable_metrics"`
 	Traces        TracesConfig      `yaml:"traces" json:"traces" validate:"required"`
+}
+
+type Duration time.Duration
+
+func (s Duration) MarshalJSON() ([]byte, error) {
+	d := time.Duration(s)
+	return []byte(fmt.Sprintf(`"%s"`, d.String())), nil
+}
+
+func (s *Duration) UnmarshalJSON(data []byte) error {
+	d, err := time.ParseDuration(strings.Trim(string(data), "\""))
+	if err != nil {
+		return err
+	}
+	*s = Duration(d)
+	return nil
+}
+
+func (s Duration) MarshalYAML() (interface{}, error) {
+	return time.Duration(s).String(), nil
+}
+
+func (s *Duration) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var d time.Duration
+	if err := unmarshal(&d); err != nil {
+		return err
+	}
+	*s = Duration(d)
+	return nil
+}
+
+func (s Duration) String() string {
+	return time.Duration(s).String()
+}
+
+func (s Duration) Seconds() float64 {
+	return time.Duration(s).Seconds()
 }
 
 type LogConfig struct {
@@ -168,16 +205,16 @@ func (lc *LogConfig) Detailed(fromConfig bool, categories ...string) DetailedLog
 }
 
 var (
-	basePath       = fmt.Sprintf("%s/.loggen", os.Getenv("HOME"))
-	configFilename = fmt.Sprintf("%s/config.yaml", basePath)
+	BasePath       = fmt.Sprintf("%s/.loggen", os.Getenv("HOME"))
+	ConfigFilename = fmt.Sprintf("%s/config.yaml", BasePath)
 	c              = &Config{}
 )
 
 func Load() {
-	f, err := os.Open(configFilename)
+	f, err := os.Open(ConfigFilename)
 	if err != nil {
 		fmt.Println("Creating default config...")
-		if err := os.MkdirAll(basePath, os.ModePerm); err != nil {
+		if err := os.MkdirAll(BasePath, os.ModePerm); err != nil {
 			log.Printf("unable create config file directory: %v", err)
 			return
 		}
@@ -272,6 +309,12 @@ func updateSettingValue(tagName, name string, value string) error {
 		val = reflect.ValueOf(m)
 	case reflect.Int64:
 		switch structFieldType.String() {
+		case "config.Duration":
+			d, err := time.ParseDuration(value)
+			if err != nil {
+				return convertErr("config.Duration")
+			}
+			val = reflect.ValueOf(Duration(d))
 		case "time.Duration":
 			d, err := time.ParseDuration(value)
 			if err != nil {
@@ -314,7 +357,7 @@ func getDefaultConfig() *Config {
 	return &Config{
 		URL:     "https://qryn.gigapipe.com",
 		Rate:    100,
-		Timeout: 30 * time.Second,
+		Timeout: Duration(30 * time.Second),
 		LogConfig: LogConfig{
 			Format: "logfmt",
 			Structure: map[string]string{
@@ -334,7 +377,7 @@ func getDefaultConfig() *Config {
 
 func writeConfig(c *Config) error {
 	b, _ := yaml.Marshal(c)
-	return os.WriteFile(configFilename, b, os.ModePerm)
+	return os.WriteFile(ConfigFilename, b, os.ModePerm)
 }
 
 func hasCategory(category string, list []string) bool {

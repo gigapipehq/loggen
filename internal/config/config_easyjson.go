@@ -73,9 +73,9 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig(in *jlexer.Le
 				in.Delim('[')
 				if out.Custom == nil {
 					if !in.IsDelim(']') {
-						out.Custom = make([]attribute.KeyValue, 0, 1)
+						out.Custom = make(attributeKeyValueList, 0, 1)
 					} else {
-						out.Custom = []attribute.KeyValue{}
+						out.Custom = attributeKeyValueList{}
 					}
 				} else {
 					out.Custom = (out.Custom)[:0]
@@ -311,6 +311,8 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig1(in *jlexer.L
 			out.Kind = trace.SpanKind(in.Int())
 		case "name":
 			out.Name = string(in.String())
+		case "duration":
+			out.Duration = time.Duration(in.Int64())
 		case "attributes":
 			if in.IsNull() {
 				in.Skip()
@@ -380,6 +382,11 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig1(out *jwriter
 		const prefix string = ",\"name\":"
 		out.RawString(prefix)
 		out.String(string(in.Name))
+	}
+	{
+		const prefix string = ",\"duration\":"
+		out.RawString(prefix)
+		out.Int64(int64(in.Duration))
 	}
 	{
 		const prefix string = ",\"attributes\":"
@@ -1086,11 +1093,9 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig7(in *jlexer.L
 		case "rate":
 			out.Rate = int(in.Int())
 		case "timeout":
-			d, err := time.ParseDuration(in.String())
-			if err != nil {
-				d = time.Second * 30
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.Timeout).UnmarshalJSON(data))
 			}
-			out.Timeout = d
 		case "log_config":
 			(out.LogConfig).UnmarshalEasyJSON(in)
 		case "enable_metrics":
@@ -1155,7 +1160,7 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig7(out *jwriter
 	{
 		const prefix string = ",\"timeout\":"
 		out.RawString(prefix)
-		out.String(time.Duration(int64(in.Timeout)).String())
+		out.Raw((in.Timeout).MarshalJSON())
 	}
 	{
 		const prefix string = ",\"log_config\":"

@@ -12,14 +12,13 @@ import (
 	"github.com/gigapipehq/loggen/web/utils"
 )
 
-func Run(ctx *fiber.Ctx) error {
-	req := ctx.UserContext().Value("req").(*config.Config)
-	p := progress.NewServer(req.Rate * int(req.Timeout.Seconds()))
+func Run(ctx *fiber.Ctx, cfg *config.Config) error {
+	p := progress.NewServer(cfg.Rate * int(cfg.Timeout.Seconds()))
 
 	errCh := make(chan error, 1)
 	cmdCtx, cancel := context.WithCancel(ctx.Context())
 	go func() {
-		errCh <- cmd.Do(cmdCtx, req, p)
+		errCh <- cmd.Do(cmdCtx, cfg, p)
 	}()
 	ctx.Response().Header.Set("Cache-Control", "no-cache")
 	ctx.Response().Header.Set("Connection", "keep-alive")
