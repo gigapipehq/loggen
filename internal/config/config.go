@@ -21,6 +21,7 @@ import (
 
 type Config struct {
 	URL           string            `yaml:"url" json:"url" validate:"required"`
+	Headers       map[string]string `yaml:"headers" json:"headers"`
 	APIKey        string            `yaml:"api_key" json:"api_key" validate:"required"`
 	APISecret     string            `yaml:"api_secret" json:"api_secret" validate:"required"`
 	Labels        map[string]string `yaml:"labels" json:"labels" validate:"required"`
@@ -128,6 +129,19 @@ func init() {
 			return u.Path, nil
 		},
 	})
+}
+
+func (cfg *Config) GetHeaders() map[string]string {
+	if cfg.Headers == nil {
+		cfg.Headers = map[string]string{}
+	}
+	m := make(map[string]string)
+	for k, v := range cfg.Headers {
+		m[k] = v
+	}
+	m["X-API-Key"] = c.APIKey
+	m["X-API-Secret"] = c.APISecret
+	return m
 }
 
 type attributeKeyValueList []attribute.KeyValue
