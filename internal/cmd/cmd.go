@@ -24,10 +24,7 @@ func Do(ctx context.Context, cfg *config.Config, progress progressTracker) error
 	defer shutdownMT()
 
 	gen := generators.New(cfg)
-	s, err := _default.New().WithHeaders(map[string]string{
-		"X-API-Key":    cfg.APIKey,
-		"X-API-Secret": cfg.APISecret,
-	}).WithURL(fmt.Sprintf("%s/loki/api/v1/push", cfg.URL))
+	s, err := _default.New().WithHeaders(cfg.GetHeaders()).WithURL(fmt.Sprintf("%s/loki/api/v1/push", cfg.URL))
 	if err != nil {
 		return fmt.Errorf("unable to create sender: %v", err)
 	}
