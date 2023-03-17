@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -18,12 +19,14 @@ var (
 		Use:   "run",
 		Short: "Run the generator in cli-mode",
 		Run: func(_ *cobra.Command, _ []string) {
+			cfg.Timeout = config.Duration(duration)
 			p := progress.NewBar(cfg.Rate*int(cfg.Timeout.Seconds()), os.Stdout)
 			if err := cmd.Do(context.Background(), cfg, p); err != nil {
 				fmt.Println(err)
 			}
 		},
 	}
+	duration time.Duration
 )
 
 func CMD() *cobra.Command {
@@ -57,10 +60,10 @@ func CMD() *cobra.Command {
 		"number of logs to generate per second",
 	)
 	runCMD.Flags().DurationVarP(
-		&cfg.Timeout,
+		&duration,
 		"timeout",
 		"d",
-		cfg.Timeout,
+		time.Duration(cfg.Timeout),
 		"length of time to run the generator before exiting",
 	)
 	runCMD.Flags().StringVarP(

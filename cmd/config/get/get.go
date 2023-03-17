@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mailru/easyjson"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v3"
@@ -59,11 +58,11 @@ var (
 			switch outputFormat {
 			case outputFmtYAML:
 				b, _ := yaml.Marshal(cfg)
-				fmt.Print(string(b))
+				fmt.Println(string(b))
 			case outputFmtJSON:
 				var out bytes.Buffer
-				b, _ := easyjson.Marshal(cfg)
-				_ = json.Indent(&out, b, "", "\t")
+				b, _ := cfg.MarshalJSON()
+				_ = json.Indent(&out, b, "", "    ")
 				fmt.Println(out.String())
 			}
 		},

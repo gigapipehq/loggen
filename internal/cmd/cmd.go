@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"time"
 
 	otelsdk "go.opentelemetry.io/otel"
 
@@ -36,7 +37,7 @@ func Do(ctx context.Context, cfg *config.Config, progress progressTracker) error
 			progress.Add(i)
 		}
 	}()
-	ctx, cancel := context.WithTimeout(ctx, cfg.Timeout)
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(cfg.Timeout))
 	defer cancel()
 	senders.Start(ctx, s, gen)
 	return nil

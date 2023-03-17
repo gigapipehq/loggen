@@ -9,5 +9,7 @@ import (
 )
 
 func Register(router fiber.Router) {
-	router.Post("/", utils.ValidateRequest(&config.Config{}), controllers.Run)
+	router.Post("/", utils.ValidateRequest(&config.Config{}), func(ctx *fiber.Ctx) error {
+		return controllers.Run(ctx, ctx.UserContext().Value("req").(*config.Config))
+	})
 }
