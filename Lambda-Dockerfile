@@ -8,11 +8,10 @@ RUN go mod download
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o loggen main.go
 
-FROM golang:1.18-alpine
+FROM public.ecr.aws/lambda/go:1
 
 EXPOSE 8080
 
-WORKDIR /
-COPY --from=builder /app/loggen .
+COPY --from=builder /app/loggen /var/task/loggen
 
-ENTRYPOINT ["./loggen"]
+ENTRYPOINT ["./loggen", "lambda"]

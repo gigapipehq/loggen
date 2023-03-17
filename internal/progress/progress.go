@@ -20,6 +20,8 @@ type Server struct {
 	writeFunc func(*bufio.Writer)
 }
 
+type Lambda struct{}
+
 func (b *Bar) Add(count int) {
 	_ = b.ProgressBar.Add(count)
 }
@@ -39,6 +41,8 @@ func (p *Server) Add(count int) {
 func (p *Server) WriteProgress(w *bufio.Writer) {
 	p.writeFunc(w)
 }
+
+func (p *Lambda) Add(_ int) {}
 
 func NewBar(max int, writer io.Writer) *Bar {
 	return &Bar{
@@ -71,4 +75,8 @@ func NewServer(max int) *Server {
 		}
 	}
 	return s
+}
+
+func NewLambda() *Lambda {
+	return &Lambda{}
 }
