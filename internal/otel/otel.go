@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"runtime"
+	"sync/atomic"
 
 	"github.com/denisbrodbeck/machineid"
 	"github.com/matishsiao/goInfo"
@@ -43,6 +44,7 @@ var (
 		semconv.TelemetrySDKLanguageKey.String("go"),
 		semconv.TelemetrySDKVersionKey.String(otel.Version()),
 	}
+	totalSpansSent int64 = 0
 )
 
 func init() {
@@ -55,10 +57,23 @@ func init() {
 	knownBaseAttributes = append(knownBaseAttributes, attribute.Int("host.cpus", info.CPUs))
 }
 
+type zipkinExporterWithLogsWrapper struct {
+	*zipkin.Exporter
+}
+
+func (z *zipkinExporterWithLogsWrapper) ExportSpans(ctx context.Context, spans []sdktrace.ReadOnlySpan) error {
+	atomic.AddInt64(&totalSpansSent, int64(len(spans)))
+	return z.Exporter.ExportSpans(ctx, spans)
+}
+
 func NewExporter(collectorURL string, httpClient *http.Client) sdktrace.SpanExporter {
 	curl := fmt.Sprintf("%s/tempo/spans", collectorURL)
 	e, _ := zipkin.New(curl, zipkin.WithClient(httpClient))
-	return e
+	return &zipkinExporterWithLogsWrapper{e}
+}
+
+func GetTotalSpansSent() int64 {
+	return atomic.LoadInt64(&totalSpansSent)
 }
 
 func NewNoopExporter() sdktrace.SpanExporter {
@@ -108,7 +123,9 @@ func NewProvider(exporter sdktrace.SpanExporter, cfg *config.Config) *sdktrace.T
 		),
 	)
 	return sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(exporter),
+		sdktrace.WithBatcher(exporter,
+			sdktrace.WithMaxExportBatchSize(sdktrace.DefaultMaxExportBatchSize),
+			sdktrace.WithMaxQueueSize(100000)),
 		sdktrace.WithResource(r),
 	)
 }

@@ -48,10 +48,7 @@ func configureMetricsAndTraces(ctx context.Context, cfg *config.Config) func() {
 	}
 	exporter := otel.NewNoopExporter()
 	if cfg.Traces.Enabled {
-		sender := _default.New().WithHeaders(map[string]string{
-			"X-API-Key":    cfg.APIKey,
-			"X-API-Secret": cfg.APISecret,
-		})
+		sender := _default.New().WithHeaders(cfg.GetHeaders())
 		exporter = otel.NewExporter(cfg.URL, sender.Client())
 	}
 	tp := otel.NewProvider(exporter, cfg)
@@ -61,6 +58,7 @@ func configureMetricsAndTraces(ctx context.Context, cfg *config.Config) func() {
 		cancel()
 		if tp != nil {
 			_ = tp.Shutdown(context.Background())
+			fmt.Printf("Total spans sent: %d\n", otel.GetTotalSpansSent())
 		}
 		if cfg.EnableMetrics {
 			<-qch
