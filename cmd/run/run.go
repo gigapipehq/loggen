@@ -18,6 +18,9 @@ var (
 	runCMD = &cobra.Command{
 		Use:   "run",
 		Short: "Run the generator in cli-mode",
+		PersistentPreRun: func(_ *cobra.Command, _ []string) {
+			config.Load()
+		},
 		Run: func(_ *cobra.Command, _ []string) {
 			cfg.Timeout = config.Duration(duration)
 			p := progress.NewBar(cfg.Rate*int(cfg.Timeout.Seconds()), os.Stdout)
