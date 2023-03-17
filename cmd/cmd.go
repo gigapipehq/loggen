@@ -7,7 +7,6 @@ import (
 	"github.com/gigapipehq/loggen/cmd/lambda"
 	"github.com/gigapipehq/loggen/cmd/run"
 	"github.com/gigapipehq/loggen/cmd/server"
-	"github.com/gigapipehq/loggen/internal/config"
 )
 
 var rootCMD = &cobra.Command{
@@ -16,7 +15,6 @@ var rootCMD = &cobra.Command{
 }
 
 func init() {
-	config.Load()
 	rootCMD.AddCommand(configcmd.CMD(), lambda.CMD(), run.CMD(), server.CMD())
 }
 

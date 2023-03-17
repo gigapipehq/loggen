@@ -7,11 +7,15 @@ import (
 	"github.com/gigapipehq/loggen/cmd/config/location"
 	"github.com/gigapipehq/loggen/cmd/config/reset"
 	"github.com/gigapipehq/loggen/cmd/config/set"
+	"github.com/gigapipehq/loggen/internal/config"
 )
 
 var configCMD = &cobra.Command{
 	Use:   "config",
 	Short: "Configuration commands",
+	PersistentPreRun: func(_ *cobra.Command, _ []string) {
+		config.Load()
+	},
 }
 
 func init() {
