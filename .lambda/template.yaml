@@ -1,0 +1,16 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: A fake log, metric and trace generator for qryn Cloud
+Resources:
+  Loggen:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      ImageUri: localhost/loggen
+      Timeout: 60
+      Events:
+        LoggenApi:
+          Type: Api
+          Properties:
+            Path: /loggen
+            Method: post
