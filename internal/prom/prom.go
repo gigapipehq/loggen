@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"runtime"
 	"time"
@@ -26,6 +27,18 @@ type lib struct {
 	linesCount  prometheus.Counter
 	bytesCount  prometheus.Counter
 	errorsCount prometheus.Counter
+}
+
+type HeaderInjectorRoundTripperWrapper struct {
+	http.RoundTripper
+	cfg *config.Config
+}
+
+func (h *HeaderInjectorRoundTripperWrapper) RoundTrip(r *http.Request) (*http.Response, error) {
+	for k, v := range h.cfg.Headers {
+		r.Header.Add(k, v)
+	}
+	return h.RoundTripper.RoundTrip(r)
 }
 
 var l = lib{}
@@ -97,6 +110,12 @@ func Initialize(ctx context.Context, cfg *config.Config) chan struct{} {
 				},
 			},
 		})
+		if _client, ok := client.(*remote.Client); ok {
+			_client.Client.Transport = &HeaderInjectorRoundTripperWrapper{
+				cfg:          cfg,
+				RoundTripper: _client.Client.Transport,
+			}
+		}
 		t := time.NewTicker(time.Second * 5)
 		for {
 			select {
