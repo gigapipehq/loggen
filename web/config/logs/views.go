@@ -10,5 +10,6 @@ import (
 
 func Register(router fiber.Router) {
 	router.Get("/", controllers.GetConfig)
+	router.Get("/categories", controllers.GetCategories)
 	router.Post("/example", utils.ValidateRequest(&config.LogConfig{}), controllers.GetExampleLine)
 }

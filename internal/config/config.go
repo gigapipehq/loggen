@@ -96,22 +96,6 @@ type SpanAttributeConfig struct {
 	ResolveFromLogValue string `yaml:"resolve_from_log_value" json:"resolve_from_log_value"`
 }
 
-type DetailedLogConfig struct {
-	Format    string    `json:"format"`
-	Structure []LogInfo `json:"structure"`
-}
-
-type LogInfo struct {
-	Display     string           `json:"display"`
-	Category    string           `json:"category"`
-	Description string           `json:"description"`
-	Example     string           `json:"example"`
-	Params      []gofakeit.Param `json:"params"`
-}
-
-//easyjson:json
-type DetailedLogStructure []LogInfo
-
 type logLine interface {
 	ToLogFMT() string
 	ToJSON() string
@@ -180,42 +164,6 @@ func GetLogLineMarshaller[T logLine](config LogConfig) func(T) string {
 	return func(obj T) string {
 		return obj.ToLogFMT()
 	}
-}
-
-func (lc *LogConfig) Detailed(fromConfig bool, categories ...string) DetailedLogStructure {
-	infos := gofakeit.FuncLookups
-	if fromConfig {
-		configInfos := map[string]gofakeit.Info{}
-		for _, v := range lc.Structure {
-			split := strings.Split(v, ":")
-			if info := gofakeit.GetFuncLookup(split[0]); info != nil {
-				if len(split) > 1 {
-					params := strings.Split(split[1], ",")
-					for i, p := range params {
-						info.Params[i].Default = p
-					}
-				}
-				configInfos[split[0]] = *info
-			}
-		}
-		infos = configInfos
-	}
-	li := DetailedLogStructure{}
-	for _, info := range infos {
-		if len(categories) > 0 {
-			if !hasCategory(info.Category, categories) {
-				continue
-			}
-		}
-		li = append(li, LogInfo{
-			Display:     info.Display,
-			Category:    info.Category,
-			Description: info.Description,
-			Example:     info.Example,
-			Params:      info.Params,
-		})
-	}
-	return li
 }
 
 var (

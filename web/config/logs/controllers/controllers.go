@@ -2,27 +2,50 @@ package controllers
 
 import (
 	"fmt"
-	"strings"
 
+	"github.com/brianvoe/gofakeit/v6"
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/gigapipehq/loggen/internal/config"
 	"github.com/gigapipehq/loggen/internal/generators"
+	"github.com/gigapipehq/loggen/web/config/logs/schemas"
 )
 
 func GetConfig(ctx *fiber.Ctx) error {
 	args := ctx.Context().QueryArgs()
-	catArgs := args.PeekMulti("category")
-	categories := make([]string, len(catArgs))
-	for i, category := range catArgs {
-		categories[i] = string(category)
+	catArgs := args.PeekMulti("categories")
+	categories := make(map[string]struct{}, len(catArgs))
+	for _, category := range catArgs {
+		categories[string(category)] = struct{}{}
 	}
 
-	fromConfig := false
-	if strings.ToLower(string(args.Peek("from_config"))) == "true" {
-		fromConfig = true
+	var funcs schemas.GeneratorFunctionList
+	for _, info := range gofakeit.FuncLookups {
+		if _, ok := categories[info.Category]; ok {
+			funcs = append(funcs, schemas.GeneratorFunction{
+				Display:     info.Display,
+				Category:    info.Category,
+				Description: info.Description,
+				Example:     info.Example,
+				Params:      info.Params,
+			})
+		}
 	}
-	return ctx.JSON(config.Get().LogConfig.Detailed(fromConfig, categories...))
+	return ctx.JSON(funcs)
+}
+
+func GetCategories(ctx *fiber.Ctx) error {
+	categories := map[string]struct{}{}
+	for _, info := range gofakeit.FuncLookups {
+		if _, ok := categories[info.Category]; !ok {
+			categories[info.Category] = struct{}{}
+		}
+	}
+	s := make(schemas.CategoryList, 0, len(categories))
+	for c := range categories {
+		s = append(s, c)
+	}
+	return ctx.JSON(s)
 }
 
 func GetExampleLine(ctx *fiber.Ctx) error {
