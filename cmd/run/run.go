@@ -22,7 +22,9 @@ var (
 			config.Load()
 		},
 		Run: func(_ *cobra.Command, _ []string) {
-			cfg.Timeout = config.Duration(duration)
+			if duration.Seconds() > 0 {
+				cfg.Timeout = config.Duration(duration)
+			}
 			p := progress.NewBar(cfg.Rate*int(cfg.Timeout.Seconds()), os.Stdout)
 			if err := cmd.Do(context.Background(), cfg, p); err != nil {
 				fmt.Println(err)
