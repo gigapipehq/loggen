@@ -4,7 +4,6 @@ package config
 
 import (
 	json "encoding/json"
-	_v6 "github.com/brianvoe/gofakeit/v6"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
@@ -533,249 +532,7 @@ func (v *SpanAttributeConfig) UnmarshalJSON(data []byte) error {
 func (v *SpanAttributeConfig) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig2(l, v)
 }
-func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig3(in *jlexer.Lexer, out *LogInfo) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeFieldName(false)
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "display":
-			out.Display = string(in.String())
-		case "category":
-			out.Category = string(in.String())
-		case "description":
-			out.Description = string(in.String())
-		case "example":
-			out.Example = string(in.String())
-		case "params":
-			if in.IsNull() {
-				in.Skip()
-				out.Params = nil
-			} else {
-				in.Delim('[')
-				if out.Params == nil {
-					if !in.IsDelim(']') {
-						out.Params = make([]_v6.Param, 0, 0)
-					} else {
-						out.Params = []_v6.Param{}
-					}
-				} else {
-					out.Params = (out.Params)[:0]
-				}
-				for !in.IsDelim(']') {
-					var v16 _v6.Param
-					easyjson6615c02eDecodeGithubComBrianvoeGofakeitV6(in, &v16)
-					out.Params = append(out.Params, v16)
-					in.WantComma()
-				}
-				in.Delim(']')
-			}
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig3(out *jwriter.Writer, in LogInfo) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"display\":"
-		out.RawString(prefix[1:])
-		out.String(string(in.Display))
-	}
-	{
-		const prefix string = ",\"category\":"
-		out.RawString(prefix)
-		out.String(string(in.Category))
-	}
-	{
-		const prefix string = ",\"description\":"
-		out.RawString(prefix)
-		out.String(string(in.Description))
-	}
-	{
-		const prefix string = ",\"example\":"
-		out.RawString(prefix)
-		out.String(string(in.Example))
-	}
-	{
-		const prefix string = ",\"params\":"
-		out.RawString(prefix)
-		if in.Params == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
-		} else {
-			out.RawByte('[')
-			for v17, v18 := range in.Params {
-				if v17 > 0 {
-					out.RawByte(',')
-				}
-				easyjson6615c02eEncodeGithubComBrianvoeGofakeitV6(out, v18)
-			}
-			out.RawByte(']')
-		}
-	}
-	out.RawByte('}')
-}
-
-// MarshalJSON supports json.Marshaler interface
-func (v LogInfo) MarshalJSON() ([]byte, error) {
-	w := jwriter.Writer{}
-	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig3(&w, v)
-	return w.Buffer.BuildBytes(), w.Error
-}
-
-// MarshalEasyJSON supports easyjson.Marshaler interface
-func (v LogInfo) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig3(w, v)
-}
-
-// UnmarshalJSON supports json.Unmarshaler interface
-func (v *LogInfo) UnmarshalJSON(data []byte) error {
-	r := jlexer.Lexer{Data: data}
-	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig3(&r, v)
-	return r.Error()
-}
-
-// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *LogInfo) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig3(l, v)
-}
-func easyjson6615c02eDecodeGithubComBrianvoeGofakeitV6(in *jlexer.Lexer, out *_v6.Param) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeFieldName(false)
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "field":
-			out.Field = string(in.String())
-		case "display":
-			out.Display = string(in.String())
-		case "type":
-			out.Type = string(in.String())
-		case "optional":
-			out.Optional = bool(in.Bool())
-		case "default":
-			out.Default = string(in.String())
-		case "options":
-			if in.IsNull() {
-				in.Skip()
-				out.Options = nil
-			} else {
-				in.Delim('[')
-				if out.Options == nil {
-					if !in.IsDelim(']') {
-						out.Options = make([]string, 0, 4)
-					} else {
-						out.Options = []string{}
-					}
-				} else {
-					out.Options = (out.Options)[:0]
-				}
-				for !in.IsDelim(']') {
-					var v19 string
-					v19 = string(in.String())
-					out.Options = append(out.Options, v19)
-					in.WantComma()
-				}
-				in.Delim(']')
-			}
-		case "description":
-			out.Description = string(in.String())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson6615c02eEncodeGithubComBrianvoeGofakeitV6(out *jwriter.Writer, in _v6.Param) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"field\":"
-		out.RawString(prefix[1:])
-		out.String(string(in.Field))
-	}
-	{
-		const prefix string = ",\"display\":"
-		out.RawString(prefix)
-		out.String(string(in.Display))
-	}
-	{
-		const prefix string = ",\"type\":"
-		out.RawString(prefix)
-		out.String(string(in.Type))
-	}
-	{
-		const prefix string = ",\"optional\":"
-		out.RawString(prefix)
-		out.Bool(bool(in.Optional))
-	}
-	{
-		const prefix string = ",\"default\":"
-		out.RawString(prefix)
-		out.String(string(in.Default))
-	}
-	{
-		const prefix string = ",\"options\":"
-		out.RawString(prefix)
-		if in.Options == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
-		} else {
-			out.RawByte('[')
-			for v20, v21 := range in.Options {
-				if v20 > 0 {
-					out.RawByte(',')
-				}
-				out.String(string(v21))
-			}
-			out.RawByte(']')
-		}
-	}
-	{
-		const prefix string = ",\"description\":"
-		out.RawString(prefix)
-		out.String(string(in.Description))
-	}
-	out.RawByte('}')
-}
-func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig4(in *jlexer.Lexer, out *LogConfig) {
+func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig3(in *jlexer.Lexer, out *LogConfig) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -805,9 +562,9 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig4(in *jlexer.L
 				for !in.IsDelim('}') {
 					key := string(in.String())
 					in.WantColon()
-					var v22 string
-					v22 = string(in.String())
-					(out.Structure)[key] = v22
+					var v16 string
+					v16 = string(in.String())
+					(out.Structure)[key] = v16
 					in.WantComma()
 				}
 				in.Delim('}')
@@ -822,7 +579,7 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig4(in *jlexer.L
 		in.Consumed()
 	}
 }
-func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig4(out *jwriter.Writer, in LogConfig) {
+func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig3(out *jwriter.Writer, in LogConfig) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -838,16 +595,16 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig4(out *jwriter
 			out.RawString(`null`)
 		} else {
 			out.RawByte('{')
-			v23First := true
-			for v23Name, v23Value := range in.Structure {
-				if v23First {
-					v23First = false
+			v17First := true
+			for v17Name, v17Value := range in.Structure {
+				if v17First {
+					v17First = false
 				} else {
 					out.RawByte(',')
 				}
-				out.String(string(v23Name))
+				out.String(string(v17Name))
 				out.RawByte(':')
-				out.String(string(v23Value))
+				out.String(string(v17Value))
 			}
 			out.RawByte('}')
 		}
@@ -858,198 +615,27 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig4(out *jwriter
 // MarshalJSON supports json.Marshaler interface
 func (v LogConfig) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig4(&w, v)
+	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig3(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v LogConfig) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig4(w, v)
+	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig3(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *LogConfig) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig4(&r, v)
+	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig3(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *LogConfig) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig4(l, v)
+	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig3(l, v)
 }
-func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig5(in *jlexer.Lexer, out *DetailedLogStructure) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		in.Skip()
-		*out = nil
-	} else {
-		in.Delim('[')
-		if *out == nil {
-			if !in.IsDelim(']') {
-				*out = make(DetailedLogStructure, 0, 0)
-			} else {
-				*out = DetailedLogStructure{}
-			}
-		} else {
-			*out = (*out)[:0]
-		}
-		for !in.IsDelim(']') {
-			var v24 LogInfo
-			(v24).UnmarshalEasyJSON(in)
-			*out = append(*out, v24)
-			in.WantComma()
-		}
-		in.Delim(']')
-	}
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig5(out *jwriter.Writer, in DetailedLogStructure) {
-	if in == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-		out.RawString("null")
-	} else {
-		out.RawByte('[')
-		for v25, v26 := range in {
-			if v25 > 0 {
-				out.RawByte(',')
-			}
-			(v26).MarshalEasyJSON(out)
-		}
-		out.RawByte(']')
-	}
-}
-
-// MarshalJSON supports json.Marshaler interface
-func (v DetailedLogStructure) MarshalJSON() ([]byte, error) {
-	w := jwriter.Writer{}
-	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig5(&w, v)
-	return w.Buffer.BuildBytes(), w.Error
-}
-
-// MarshalEasyJSON supports easyjson.Marshaler interface
-func (v DetailedLogStructure) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig5(w, v)
-}
-
-// UnmarshalJSON supports json.Unmarshaler interface
-func (v *DetailedLogStructure) UnmarshalJSON(data []byte) error {
-	r := jlexer.Lexer{Data: data}
-	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig5(&r, v)
-	return r.Error()
-}
-
-// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *DetailedLogStructure) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig5(l, v)
-}
-func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig6(in *jlexer.Lexer, out *DetailedLogConfig) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeFieldName(false)
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "format":
-			out.Format = string(in.String())
-		case "structure":
-			if in.IsNull() {
-				in.Skip()
-				out.Structure = nil
-			} else {
-				in.Delim('[')
-				if out.Structure == nil {
-					if !in.IsDelim(']') {
-						out.Structure = make([]LogInfo, 0, 0)
-					} else {
-						out.Structure = []LogInfo{}
-					}
-				} else {
-					out.Structure = (out.Structure)[:0]
-				}
-				for !in.IsDelim(']') {
-					var v27 LogInfo
-					(v27).UnmarshalEasyJSON(in)
-					out.Structure = append(out.Structure, v27)
-					in.WantComma()
-				}
-				in.Delim(']')
-			}
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig6(out *jwriter.Writer, in DetailedLogConfig) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"format\":"
-		out.RawString(prefix[1:])
-		out.String(string(in.Format))
-	}
-	{
-		const prefix string = ",\"structure\":"
-		out.RawString(prefix)
-		if in.Structure == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
-		} else {
-			out.RawByte('[')
-			for v28, v29 := range in.Structure {
-				if v28 > 0 {
-					out.RawByte(',')
-				}
-				(v29).MarshalEasyJSON(out)
-			}
-			out.RawByte(']')
-		}
-	}
-	out.RawByte('}')
-}
-
-// MarshalJSON supports json.Marshaler interface
-func (v DetailedLogConfig) MarshalJSON() ([]byte, error) {
-	w := jwriter.Writer{}
-	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig6(&w, v)
-	return w.Buffer.BuildBytes(), w.Error
-}
-
-// MarshalEasyJSON supports easyjson.Marshaler interface
-func (v DetailedLogConfig) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig6(w, v)
-}
-
-// UnmarshalJSON supports json.Unmarshaler interface
-func (v *DetailedLogConfig) UnmarshalJSON(data []byte) error {
-	r := jlexer.Lexer{Data: data}
-	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig6(&r, v)
-	return r.Error()
-}
-
-// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *DetailedLogConfig) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig6(l, v)
-}
-func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig7(in *jlexer.Lexer, out *Config) {
+func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig4(in *jlexer.Lexer, out *Config) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1070,6 +656,22 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig7(in *jlexer.L
 		switch key {
 		case "url":
 			out.URL = string(in.String())
+		case "headers":
+			if in.IsNull() {
+				in.Skip()
+			} else {
+				in.Delim('{')
+				out.Headers = make(map[string]string)
+				for !in.IsDelim('}') {
+					key := string(in.String())
+					in.WantColon()
+					var v18 string
+					v18 = string(in.String())
+					(out.Headers)[key] = v18
+					in.WantComma()
+				}
+				in.Delim('}')
+			}
 		case "api_key":
 			out.APIKey = string(in.String())
 		case "api_secret":
@@ -1083,9 +685,9 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig7(in *jlexer.L
 				for !in.IsDelim('}') {
 					key := string(in.String())
 					in.WantColon()
-					var v30 string
-					v30 = string(in.String())
-					(out.Labels)[key] = v30
+					var v19 string
+					v19 = string(in.String())
+					(out.Labels)[key] = v19
 					in.WantComma()
 				}
 				in.Delim('}')
@@ -1112,7 +714,7 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig7(in *jlexer.L
 		in.Consumed()
 	}
 }
-func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig7(out *jwriter.Writer, in Config) {
+func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig4(out *jwriter.Writer, in Config) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1120,6 +722,27 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig7(out *jwriter
 		const prefix string = ",\"url\":"
 		out.RawString(prefix[1:])
 		out.String(string(in.URL))
+	}
+	{
+		const prefix string = ",\"headers\":"
+		out.RawString(prefix)
+		if in.Headers == nil && (out.Flags&jwriter.NilMapAsEmpty) == 0 {
+			out.RawString(`null`)
+		} else {
+			out.RawByte('{')
+			v20First := true
+			for v20Name, v20Value := range in.Headers {
+				if v20First {
+					v20First = false
+				} else {
+					out.RawByte(',')
+				}
+				out.String(string(v20Name))
+				out.RawByte(':')
+				out.String(string(v20Value))
+			}
+			out.RawByte('}')
+		}
 	}
 	{
 		const prefix string = ",\"api_key\":"
@@ -1138,16 +761,16 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig7(out *jwriter
 			out.RawString(`null`)
 		} else {
 			out.RawByte('{')
-			v31First := true
-			for v31Name, v31Value := range in.Labels {
-				if v31First {
-					v31First = false
+			v21First := true
+			for v21Name, v21Value := range in.Labels {
+				if v21First {
+					v21First = false
 				} else {
 					out.RawByte(',')
 				}
-				out.String(string(v31Name))
+				out.String(string(v21Name))
 				out.RawByte(':')
-				out.String(string(v31Value))
+				out.String(string(v21Value))
 			}
 			out.RawByte('}')
 		}
@@ -1183,23 +806,23 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig7(out *jwriter
 // MarshalJSON supports json.Marshaler interface
 func (v Config) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig7(&w, v)
+	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig4(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Config) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig7(w, v)
+	easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig4(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Config) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig7(&r, v)
+	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig4(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Config) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig7(l, v)
+	easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig4(l, v)
 }
