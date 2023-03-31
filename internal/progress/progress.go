@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
 	"time"
 
 	"github.com/schollz/progressbar/v3"
@@ -70,6 +71,7 @@ func NewServer(max int) *Server {
 	}
 	s.writeFunc = func(w *bufio.Writer) {
 		for range s.ch {
+			log.Printf("Server progress: %d / %d", s.current, s.max)
 			_, _ = w.Write(s.marshal())
 			_ = w.Flush()
 		}
