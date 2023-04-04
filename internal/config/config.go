@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -84,7 +85,7 @@ type TracesConfig struct {
 type SpanStep struct {
 	Kind       trace.SpanKind        `yaml:"kind" json:"kind" validate:"required"`
 	Name       string                `yaml:"name" json:"name"`
-	Duration   time.Duration         `yaml:"duration" json:"duration"`
+	Duration   Duration              `yaml:"duration" json:"duration"`
 	Attributes []SpanAttributeConfig `yaml:"attributes" json:"attributes"`
 	Children   []SpanStep            `yaml:"children" json:"children"`
 }
@@ -130,20 +131,21 @@ func (cfg *Config) GetHeaders() map[string]string {
 
 type attributeKeyValueList []attribute.KeyValue
 
+func (kvList *attributeKeyValueList) UnmarshalJSON(b []byte) error {
+	var m map[string]interface{}
+	if err := json.Unmarshal(b, &m); err != nil {
+		return err
+	}
+	kvList = attributeKeyValueListFromMap(m)
+	return nil
+}
+
 func (kvList *attributeKeyValueList) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var m map[string]interface{}
 	if err := unmarshal(&m); err != nil {
 		return err
 	}
-
-	var kv []attribute.KeyValue
-	for k, v := range m {
-		kv = append(kv, attribute.KeyValue{
-			Key:   attribute.Key(k),
-			Value: attribute.StringValue(fmt.Sprintf("%v", v)),
-		})
-	}
-	*kvList = kv
+	kvList = attributeKeyValueListFromMap(m)
 	return nil
 }
 
@@ -342,11 +344,14 @@ func writeConfig(c *Config) error {
 	return os.WriteFile(ConfigFilename, b, os.ModePerm)
 }
 
-func hasCategory(category string, list []string) bool {
-	for _, cat := range list {
-		if cat == category {
-			return true
-		}
+func attributeKeyValueListFromMap(m map[string]interface{}) *attributeKeyValueList {
+	var kv []attribute.KeyValue
+	for k, v := range m {
+		kv = append(kv, attribute.KeyValue{
+			Key:   attribute.Key(k),
+			Value: attribute.StringValue(fmt.Sprintf("%v", v)),
+		})
 	}
-	return false
+	kvl := attributeKeyValueList(kv)
+	return &kvl
 }

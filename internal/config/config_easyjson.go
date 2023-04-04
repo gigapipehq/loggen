@@ -9,7 +9,6 @@ import (
 	jwriter "github.com/mailru/easyjson/jwriter"
 	attribute "go.opentelemetry.io/otel/attribute"
 	trace "go.opentelemetry.io/otel/trace"
-	time "time"
 )
 
 // suppress unused package warning
@@ -65,27 +64,8 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig(in *jlexer.Le
 				in.Delim(']')
 			}
 		case "custom":
-			if in.IsNull() {
-				in.Skip()
-				out.Custom = nil
-			} else {
-				in.Delim('[')
-				if out.Custom == nil {
-					if !in.IsDelim(']') {
-						out.Custom = make(attributeKeyValueList, 0, 1)
-					} else {
-						out.Custom = attributeKeyValueList{}
-					}
-				} else {
-					out.Custom = (out.Custom)[:0]
-				}
-				for !in.IsDelim(']') {
-					var v2 attribute.KeyValue
-					easyjson6615c02eDecodeGoOpentelemetryIoOtelAttribute(in, &v2)
-					out.Custom = append(out.Custom, v2)
-					in.WantComma()
-				}
-				in.Delim(']')
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.Custom).UnmarshalJSON(data))
 			}
 		case "spans":
 			if in.IsNull() {
@@ -103,9 +83,9 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig(in *jlexer.Le
 					out.Spans = (out.Spans)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v3 SpanStep
-					(v3).UnmarshalEasyJSON(in)
-					out.Spans = append(out.Spans, v3)
+					var v2 SpanStep
+					(v2).UnmarshalEasyJSON(in)
+					out.Spans = append(out.Spans, v2)
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -136,11 +116,11 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig(out *jwriter.
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v4, v5 := range in.Defaults {
-				if v4 > 0 {
+			for v3, v4 := range in.Defaults {
+				if v3 > 0 {
 					out.RawByte(',')
 				}
-				out.String(string(v5))
+				out.String(string(v4))
 			}
 			out.RawByte(']')
 		}
@@ -152,11 +132,11 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig(out *jwriter.
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v6, v7 := range in.Custom {
-				if v6 > 0 {
+			for v5, v6 := range in.Custom {
+				if v5 > 0 {
 					out.RawByte(',')
 				}
-				easyjson6615c02eEncodeGoOpentelemetryIoOtelAttribute(out, v7)
+				easyjson6615c02eEncodeGoOpentelemetryIoOtelAttribute(out, v6)
 			}
 			out.RawByte(']')
 		}
@@ -168,11 +148,11 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig(out *jwriter.
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v8, v9 := range in.Spans {
-				if v8 > 0 {
+			for v7, v8 := range in.Spans {
+				if v7 > 0 {
 					out.RawByte(',')
 				}
-				(v9).MarshalEasyJSON(out)
+				(v8).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}
@@ -311,7 +291,9 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig1(in *jlexer.L
 		case "name":
 			out.Name = string(in.String())
 		case "duration":
-			out.Duration = time.Duration(in.Int64())
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.Duration).UnmarshalJSON(data))
+			}
 		case "attributes":
 			if in.IsNull() {
 				in.Skip()
@@ -328,9 +310,9 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig1(in *jlexer.L
 					out.Attributes = (out.Attributes)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v10 SpanAttributeConfig
-					(v10).UnmarshalEasyJSON(in)
-					out.Attributes = append(out.Attributes, v10)
+					var v9 SpanAttributeConfig
+					(v9).UnmarshalEasyJSON(in)
+					out.Attributes = append(out.Attributes, v9)
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -351,9 +333,9 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig1(in *jlexer.L
 					out.Children = (out.Children)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v11 SpanStep
-					(v11).UnmarshalEasyJSON(in)
-					out.Children = append(out.Children, v11)
+					var v10 SpanStep
+					(v10).UnmarshalEasyJSON(in)
+					out.Children = append(out.Children, v10)
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -385,7 +367,7 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig1(out *jwriter
 	{
 		const prefix string = ",\"duration\":"
 		out.RawString(prefix)
-		out.Int64(int64(in.Duration))
+		out.Raw((in.Duration).MarshalJSON())
 	}
 	{
 		const prefix string = ",\"attributes\":"
@@ -394,11 +376,11 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig1(out *jwriter
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v12, v13 := range in.Attributes {
-				if v12 > 0 {
+			for v11, v12 := range in.Attributes {
+				if v11 > 0 {
 					out.RawByte(',')
 				}
-				(v13).MarshalEasyJSON(out)
+				(v12).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}
@@ -410,11 +392,11 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig1(out *jwriter
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v14, v15 := range in.Children {
-				if v14 > 0 {
+			for v13, v14 := range in.Children {
+				if v13 > 0 {
 					out.RawByte(',')
 				}
-				(v15).MarshalEasyJSON(out)
+				(v14).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}
@@ -562,9 +544,9 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig3(in *jlexer.L
 				for !in.IsDelim('}') {
 					key := string(in.String())
 					in.WantColon()
-					var v16 string
-					v16 = string(in.String())
-					(out.Structure)[key] = v16
+					var v15 string
+					v15 = string(in.String())
+					(out.Structure)[key] = v15
 					in.WantComma()
 				}
 				in.Delim('}')
@@ -595,16 +577,16 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig3(out *jwriter
 			out.RawString(`null`)
 		} else {
 			out.RawByte('{')
-			v17First := true
-			for v17Name, v17Value := range in.Structure {
-				if v17First {
-					v17First = false
+			v16First := true
+			for v16Name, v16Value := range in.Structure {
+				if v16First {
+					v16First = false
 				} else {
 					out.RawByte(',')
 				}
-				out.String(string(v17Name))
+				out.String(string(v16Name))
 				out.RawByte(':')
-				out.String(string(v17Value))
+				out.String(string(v16Value))
 			}
 			out.RawByte('}')
 		}
@@ -665,9 +647,9 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig4(in *jlexer.L
 				for !in.IsDelim('}') {
 					key := string(in.String())
 					in.WantColon()
-					var v18 string
-					v18 = string(in.String())
-					(out.Headers)[key] = v18
+					var v17 string
+					v17 = string(in.String())
+					(out.Headers)[key] = v17
 					in.WantComma()
 				}
 				in.Delim('}')
@@ -685,9 +667,9 @@ func easyjson6615c02eDecodeGithubComGigapipehqLoggenInternalConfig4(in *jlexer.L
 				for !in.IsDelim('}') {
 					key := string(in.String())
 					in.WantColon()
-					var v19 string
-					v19 = string(in.String())
-					(out.Labels)[key] = v19
+					var v18 string
+					v18 = string(in.String())
+					(out.Labels)[key] = v18
 					in.WantComma()
 				}
 				in.Delim('}')
@@ -730,16 +712,16 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig4(out *jwriter
 			out.RawString(`null`)
 		} else {
 			out.RawByte('{')
-			v20First := true
-			for v20Name, v20Value := range in.Headers {
-				if v20First {
-					v20First = false
+			v19First := true
+			for v19Name, v19Value := range in.Headers {
+				if v19First {
+					v19First = false
 				} else {
 					out.RawByte(',')
 				}
-				out.String(string(v20Name))
+				out.String(string(v19Name))
 				out.RawByte(':')
-				out.String(string(v20Value))
+				out.String(string(v19Value))
 			}
 			out.RawByte('}')
 		}
@@ -761,16 +743,16 @@ func easyjson6615c02eEncodeGithubComGigapipehqLoggenInternalConfig4(out *jwriter
 			out.RawString(`null`)
 		} else {
 			out.RawByte('{')
-			v21First := true
-			for v21Name, v21Value := range in.Labels {
-				if v21First {
-					v21First = false
+			v20First := true
+			for v20Name, v20Value := range in.Labels {
+				if v20First {
+					v20First = false
 				} else {
 					out.RawByte(',')
 				}
-				out.String(string(v21Name))
+				out.String(string(v20Name))
 				out.RawByte(':')
-				out.String(string(v21Value))
+				out.String(string(v20Value))
 			}
 			out.RawByte('}')
 		}

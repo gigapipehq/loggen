@@ -96,7 +96,7 @@ func createSpan(ctx context.Context, step config.SpanStep, line logLine, start t
 	lctx, span := otel.Tracer.Start(
 		ctx, step.Name, trace.WithSpanKind(trace.ValidateSpanKind(step.Kind)), trace.WithTimestamp(start),
 	)
-	defer span.End(trace.WithTimestamp(start.Add(step.Duration)))
+	defer span.End(trace.WithTimestamp(start.Add(time.Duration(step.Duration))))
 
 	attrs := make([]attribute.KeyValue, len(step.Attributes))
 	for i, attr := range step.Attributes {
@@ -115,7 +115,7 @@ func createSpan(ctx context.Context, step config.SpanStep, line logLine, start t
 
 	d := step.Duration
 	for _, child := range step.Children {
-		createSpan(lctx, child, line, start.Add(d))
+		createSpan(lctx, child, line, start.Add(time.Duration(d)))
 		d += child.Duration
 	}
 	return span.SpanContext().TraceID()
