@@ -25,6 +25,11 @@ func StartServer(ctx context.Context) error {
 			return easyjson.Unmarshal(data, v.(easyjson.Unmarshaler))
 		},
 	})
+
+	app.Get("/status", func(ctx *fiber.Ctx) error {
+		return ctx.SendStatus(fiber.StatusOK)
+	})
+
 	app.Use(func(ctx *fiber.Ctx) error {
 		ctx.Context().SetContentType("application/json")
 		return ctx.Next()
