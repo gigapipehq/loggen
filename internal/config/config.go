@@ -124,8 +124,8 @@ func (cfg *Config) GetHeaders() map[string]string {
 	for k, v := range cfg.Headers {
 		m[k] = v
 	}
-	m["X-API-Key"] = c.APIKey
-	m["X-API-Secret"] = c.APISecret
+	m["X-API-Key"] = cfg.APIKey
+	m["X-API-Secret"] = cfg.APISecret
 	return m
 }
 
