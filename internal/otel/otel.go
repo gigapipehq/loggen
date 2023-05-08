@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"runtime"
 	"sync/atomic"
 
@@ -66,22 +67,18 @@ func (z *zipkinExporterWithLogsWrapper) ExportSpans(ctx context.Context, spans [
 	return z.Exporter.ExportSpans(ctx, spans)
 }
 
-func NewExporter(collectorURL string, httpClient *http.Client) sdktrace.SpanExporter {
+func NewZipkinExporter(collectorURL string, httpClient *http.Client) sdktrace.SpanExporter {
 	curl := fmt.Sprintf("%s/tempo/spans", collectorURL)
 	e, _ := zipkin.New(curl, zipkin.WithClient(httpClient))
 	return &zipkinExporterWithLogsWrapper{e}
 }
 
-func GetTotalSpansSent() int64 {
-	return atomic.LoadInt64(&totalSpansSent)
+func NewFileExporter(f *os.File) sdktrace.SpanExporter {
+	return newStdoutTraceExporter(f)
 }
 
-func NewNoopExporter() sdktrace.SpanExporter {
-	e, _ := stdouttrace.New(
-		stdouttrace.WithWriter(io.Discard),
-		stdouttrace.WithoutTimestamps(),
-	)
-	return e
+func NewDiscardExporter() sdktrace.SpanExporter {
+	return newStdoutTraceExporter(io.Discard)
 }
 
 func NewProvider(exporter sdktrace.SpanExporter, cfg *config.Config) *sdktrace.TracerProvider {
@@ -128,4 +125,15 @@ func NewProvider(exporter sdktrace.SpanExporter, cfg *config.Config) *sdktrace.T
 			sdktrace.WithMaxQueueSize(100000)),
 		sdktrace.WithResource(r),
 	)
+}
+
+func GetTotalSpansSent() int64 {
+	return atomic.LoadInt64(&totalSpansSent)
+}
+
+func newStdoutTraceExporter(writer io.Writer) sdktrace.SpanExporter {
+	e, _ := stdouttrace.New(
+		stdouttrace.WithWriter(writer),
+	)
+	return e
 }

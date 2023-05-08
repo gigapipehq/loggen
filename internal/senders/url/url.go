@@ -83,7 +83,7 @@ func (s *URLSender) SupportsMetrics() bool {
 }
 
 func (s *URLSender) TracesExporter() sdktrace.SpanExporter {
-	return otel.NewExporter(s.transport.url.String(), s.httpClient)
+	return otel.NewZipkinExporter(s.transport.url.String(), s.httpClient)
 }
 
 func (s *URLSender) Close() error {

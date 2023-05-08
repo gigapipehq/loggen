@@ -3,6 +3,7 @@ package file
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -36,7 +37,12 @@ func (s *FileSender) SupportsMetrics() bool {
 }
 
 func (s *FileSender) TracesExporter() sdktrace.SpanExporter {
-	return otel.NewNoopExporter()
+	f, err := os.Create(fmt.Sprintf("%s.trace.json", s.file.Name()))
+	if err != nil {
+		log.Printf("Unable to create file for traces export: %v. Discarding traces", err)
+		return otel.NewDiscardExporter()
+	}
+	return otel.NewFileExporter(f)
 }
 
 func (s *FileSender) Close() error {

@@ -51,7 +51,11 @@ func configureMetricsAndTraces(ctx context.Context, cfg *config.Config, s sender
 		qch = prom.Initialize(pctx, cfg)
 	}
 
-	tp := otel.NewProvider(s.TracesExporter(), cfg)
+	exporter := otel.NewDiscardExporter()
+	if cfg.EnableMetrics {
+		exporter = s.TracesExporter()
+	}
+	tp := otel.NewProvider(exporter, cfg)
 	otelsdk.SetTracerProvider(tp)
 
 	return func() {
