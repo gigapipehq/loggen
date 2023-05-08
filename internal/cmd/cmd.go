@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"time"
 
 	otelsdk "go.opentelemetry.io/otel"
@@ -12,7 +13,8 @@ import (
 	"github.com/gigapipehq/loggen/internal/otel"
 	"github.com/gigapipehq/loggen/internal/prom"
 	"github.com/gigapipehq/loggen/internal/senders"
-	_default "github.com/gigapipehq/loggen/internal/senders/default"
+	"github.com/gigapipehq/loggen/internal/senders/file"
+	surl "github.com/gigapipehq/loggen/internal/senders/url"
 )
 
 type progressTracker interface {
@@ -20,15 +22,15 @@ type progressTracker interface {
 }
 
 func Do(ctx context.Context, cfg *config.Config, progress progressTracker) error {
-	shutdownMT := configureMetricsAndTraces(ctx, cfg)
-	defer shutdownMT()
-
-	gen := generators.New(cfg)
-	s, err := _default.New().WithHeaders(cfg.GetHeaders()).WithURL(fmt.Sprintf("%s/loki/api/v1/push", cfg.URL))
+	s, err := getSender(cfg)
 	if err != nil {
 		return fmt.Errorf("unable to create sender: %v", err)
 	}
 
+	shutdownMT := configureMetricsAndTraces(ctx, cfg, s)
+	defer shutdownMT()
+
+	gen := generators.New(cfg)
 	go func() {
 		for i := range s.Progress() {
 			progress.Add(i)
@@ -40,18 +42,16 @@ func Do(ctx context.Context, cfg *config.Config, progress progressTracker) error
 	return nil
 }
 
-func configureMetricsAndTraces(ctx context.Context, cfg *config.Config) func() {
+func configureMetricsAndTraces(ctx context.Context, cfg *config.Config, s senders.Sender) func() {
 	pctx, cancel := context.WithCancel(ctx)
 	var qch chan struct{}
-	if cfg.EnableMetrics {
+
+	withMetrics := s.SupportsMetrics() && cfg.EnableMetrics
+	if withMetrics {
 		qch = prom.Initialize(pctx, cfg)
 	}
-	exporter := otel.NewNoopExporter()
-	if cfg.Traces.Enabled {
-		sender := _default.New().WithHeaders(cfg.GetHeaders())
-		exporter = otel.NewExporter(cfg.URL, sender.Client())
-	}
-	tp := otel.NewProvider(exporter, cfg)
+
+	tp := otel.NewProvider(s.TracesExporter(), cfg)
 	otelsdk.SetTracerProvider(tp)
 
 	return func() {
@@ -60,9 +60,26 @@ func configureMetricsAndTraces(ctx context.Context, cfg *config.Config) func() {
 			_ = tp.Shutdown(context.Background())
 			fmt.Printf("Total spans sent: %d\n", otel.GetTotalSpansSent())
 		}
-		if cfg.EnableMetrics {
+
+		if withMetrics {
 			<-qch
 			close(qch)
 		}
 	}
+}
+
+func getSender(cfg *config.Config) (senders.Sender, error) {
+	u, err := url.Parse(cfg.URL)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse sender output location '%s': %v", cfg.URL, err)
+	}
+	if u.Scheme == "file" {
+		s, err := file.New(fmt.Sprintf("%s%s", u.Host, u.Path))
+		if err != nil {
+			return nil, fmt.Errorf("unable to create file: %v", err)
+		}
+		return s, nil
+	}
+	u.Path = "/loki/api/v1/push"
+	return surl.New(u).WithHeaders(cfg.GetHeaders()), nil
 }
