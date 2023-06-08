@@ -30,6 +30,8 @@ spec:
     metadata:
       labels:
         app: loggen
+      annotations:
+        linkerd.io/inject: enabled
     spec:
       containers:
         - name: loggen
