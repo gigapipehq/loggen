@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+
 	"github.com/gigapipehq/loggen/internal/prom"
 )
 
@@ -14,6 +16,9 @@ type Sender interface {
 	Send(batch []byte) error
 	AddProgress(int)
 	Progress() <-chan int
+	SupportsMetrics() bool
+	Close() error
+	TracesExporter() sdktrace.SpanExporter
 }
 
 type Generator interface {
@@ -53,15 +58,18 @@ func Start(ctx context.Context, sender Sender, generator Generator) {
 		select {
 		case <-ctx.Done():
 			wg.Wait()
+			if err := sender.Close(); err != nil {
+				log.Printf("Unable to close sender down correctly: %v", err)
+			}
 			return
 		case <-t.C:
 			batch := <-batchChannel
 			go func() {
-				go func() {
-					sender.AddProgress(generator.Rate())
-				}()
 				wg.Add(1)
-				defer wg.Done()
+				defer func() {
+					sender.AddProgress(generator.Rate())
+					wg.Done()
+				}()
 
 				prom.AddLines(generator.Rate())
 				prom.AddBytes(len(batch))

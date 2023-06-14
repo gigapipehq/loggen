@@ -1,4 +1,4 @@
-package _default
+package url
 
 import (
 	"bytes"
@@ -6,6 +6,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+
+	"github.com/gigapipehq/loggen/internal/otel"
 )
 
 type roundTripper struct {
@@ -18,17 +22,17 @@ func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	return http.DefaultTransport.RoundTrip(req)
 }
 
-type DefaultSender struct {
+type URLSender struct {
 	httpClient *http.Client
 	transport  *roundTripper
 	progressCh chan int
 }
 
-func (s *DefaultSender) Client() *http.Client {
+func (s *URLSender) Client() *http.Client {
 	return s.httpClient
 }
 
-func (s *DefaultSender) WithHeaders(headers map[string]string) *DefaultSender {
+func (s *URLSender) WithHeaders(headers map[string]string) *URLSender {
 	httpHeaders := http.Header{}
 	for k, v := range headers {
 		httpHeaders.Add(k, v)
@@ -41,27 +45,15 @@ func (s *DefaultSender) WithHeaders(headers map[string]string) *DefaultSender {
 	return s
 }
 
-func (s *DefaultSender) WithURL(httpURL string) (*DefaultSender, error) {
-	u, err := url.Parse(httpURL)
-	if err != nil {
-		return nil, err
-	}
-	if s.transport == nil {
-		s.transport = &roundTripper{}
-	}
-	s.transport.url = u
-	return s, nil
-}
-
-func (s *DefaultSender) AddProgress(count int) {
+func (s *URLSender) AddProgress(count int) {
 	s.progressCh <- count
 }
 
-func (s *DefaultSender) Progress() <-chan int {
+func (s *URLSender) Progress() <-chan int {
 	return s.progressCh
 }
 
-func (s *DefaultSender) Send(batch []byte) error {
+func (s *URLSender) Send(batch []byte) error {
 	httpMethod := "POST"
 	reqSize := int64(len(batch))
 	body := io.NopCloser(bytes.NewReader(batch))
@@ -86,9 +78,26 @@ func (s *DefaultSender) Send(batch []byte) error {
 	return nil
 }
 
-func New() *DefaultSender {
-	return &DefaultSender{
+func (s *URLSender) SupportsMetrics() bool {
+	return true
+}
+
+func (s *URLSender) TracesExporter() sdktrace.SpanExporter {
+	return otel.NewZipkinExporter(s.transport.url.String(), s.httpClient)
+}
+
+func (s *URLSender) Close() error {
+	s.httpClient.CloseIdleConnections()
+	close(s.progressCh)
+	return nil
+}
+
+func New(httpURL *url.URL) *URLSender {
+	return &URLSender{
 		httpClient: &http.Client{},
+		transport: &roundTripper{
+			url: httpURL,
+		},
 		progressCh: make(chan int),
 	}
 }

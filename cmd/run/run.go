@@ -18,9 +18,6 @@ var (
 	runCMD = &cobra.Command{
 		Use:   "run",
 		Short: "Run the generator in cli-mode",
-		PersistentPreRun: func(_ *cobra.Command, _ []string) {
-			config.Load()
-		},
 		Run: func(_ *cobra.Command, _ []string) {
 			if duration.Seconds() > 0 {
 				cfg.Timeout = config.Duration(duration)
@@ -35,7 +32,15 @@ var (
 )
 
 func CMD() *cobra.Command {
+	config.Load()
 	cfg = config.Get()
+	runCMD.Flags().StringVarP(
+		&cfg.URL,
+		"output",
+		"o",
+		cfg.URL,
+		"output location for generated data. Either qryn URL or file location",
+	)
 	runCMD.Flags().StringVarP(
 		&cfg.APIKey,
 		"api-key",
