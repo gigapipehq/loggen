@@ -51,14 +51,12 @@ func Initialize(ctx context.Context, cfg *config.Config) chan struct{} {
 
 	info, _ := goInfo.GetInfo()
 	labels := prometheus.Labels{
-		"device_id":         mid,
-		"host_arch":         runtime.GOARCH,
-		"host_cpus":         fmt.Sprintf("%d", info.CPUs),
-		"config_url":        cfg.URL,
-		"config_api_key":    cfg.APIKey,
-		"config_api_secret": cfg.APISecret,
-		"config_rate":       fmt.Sprintf("%d", cfg.Rate),
-		"config_timeout":    cfg.Timeout.String(),
+		"device_id":      mid,
+		"host_arch":      runtime.GOARCH,
+		"host_cpus":      fmt.Sprintf("%d", info.CPUs),
+		"config_url":     cfg.URL,
+		"config_rate":    fmt.Sprintf("%d", cfg.Rate),
+		"config_timeout": cfg.Timeout.String(),
 	}
 	for k, v := range cfg.Labels {
 		labels[k] = v
